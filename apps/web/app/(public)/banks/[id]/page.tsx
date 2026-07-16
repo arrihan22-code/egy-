@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 const MapView = dynamic(() => import('../../../components/MapView'), { ssr: false });
+const ReviewSection = dynamic(() => import('../../../components/ReviewSection'), { ssr: false });
 
 interface BankBranch {
   id: string;
@@ -86,6 +87,8 @@ export default function BankDetailPage() {
           </div>
         </section>
       )}
+
+      <ReviewSection entityType="bank" entityId={params.id as string} />
     </div>
   );
 }

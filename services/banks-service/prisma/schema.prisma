@@ -393,3 +393,39 @@ model SearchLog {
   @@index([query])
   @@map("search_logs")
 }
+
+model Review {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  entityType     String   @map("entity_type")
+  entityId       String   @map("entity_id") @db.Uuid
+  rating         Int      @default(5)
+  title         String?
+  comment       String?
+  isVerifiedPurchase Boolean @default(false) @map("is_verified_purchase")
+  isApproved     Boolean  @default(false) @map("is_approved")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  photos ReviewPhoto[]
+
+  @@unique([userId, entityType, entityId])
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([entityType, entityId, rating])
+  @@map("reviews")
+}
+
+model ReviewPhoto {
+  id        String   @id @default(uuid()) @db.Uuid
+  reviewId  String   @map("review_id") @db.Uuid
+  url       String
+  caption   String?
+  sortOrder Int      @default(0) @map("sort_order")
+
+  review Review @relation(fields: [reviewId], references: [id])
+
+  @@index([reviewId])
+  @@map("review_photos")
+}
