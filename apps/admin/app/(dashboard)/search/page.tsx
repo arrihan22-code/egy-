@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 
 const SEARCH_API = process.env.NEXT_PUBLIC_SEARCH_API || 'http://localhost:3060/api/v1/search';
 
+const thStyle: React.CSSProperties = { padding: '0.5rem 0.75rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb', fontSize: '0.8rem', textTransform: 'uppercase', color: '#6b7280' };
+const tdStyle: React.CSSProperties = { padding: '0.5rem 0.75rem', fontSize: '0.875rem' };
+
 export default function SearchAdminPage() {
-  const [stats, setStats] = useState<any>(null);
   const [popular, setPopular] = useState<any[]>([]);
   const [trending, setTrending] = useState<any[]>([]);
   const [indexStats, setIndexStats] = useState<any>(null);
