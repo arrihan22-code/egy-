@@ -25,6 +25,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </nav>
         </header>
-        <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem' }}>{children}</main>
+        <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem' }}>
+          {children}
+        </main>
       </body>
     </html>
