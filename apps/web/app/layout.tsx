@@ -16,6 +16,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/banks">Banks</a>
             <a href="/pharmacies">Pharmacies</a>
             <a href="/hospitals">Hospitals</a>
+            <a href="/government">Government</a>
+            <a href="/transport">Transport</a>
+            <a href="/emergency" style={{ color: '#dc2626' }}>Emergency</a>
           </nav>
         </header>
         <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem' }}>{children}</main>
