@@ -1,12 +1,9 @@
-interface Props {
-  params: { id: string };
-}
-
-export default async function BankDetailPage({ params }: Props) {
+export default async function BankDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   let bank: any = null;
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/banks/${params.id}`, { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/banks/${id}`, { cache: 'no-store' });
     const json = await res.json();
     bank = json.data || null;
   } catch {
