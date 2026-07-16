@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@egypt/shared-types": ["packages/shared-types/src"],
+      "@egypt/shared-schemas": ["packages/shared-schemas/src"],
+      "@egypt/shared-utils": ["packages/shared-utils/src"],
+      "@egypt/collector-framework": ["services/collector-framework/src"]
+    }
+  }
+}

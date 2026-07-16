@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ImportLog {
+  id              String   @id @default(uuid()) @db.Uuid
+  collectorId     String   @map("collector_id")
+  sourceUrl       String   @map("source_url")
+  sourceName      String   @map("source_name")
+  sourcePriority  Int      @map("source_priority")
+  status          String   @default("running")
+  recordsFetched  Int      @default(0) @map("records_fetched")
+  recordsInserted Int      @default(0) @map("records_inserted")
+  recordsUpdated  Int      @default(0) @map("records_updated")
+  recordsUnchanged Int     @default(0) @map("records_unchanged")
+  recordsFailed   Int      @default(0) @map("records_failed")
+  errors          Json?
+  durationMs      Int?     @map("duration_ms")
+  dataVersion     String?  @map("data_version")
+  startedAt       DateTime @map("started_at")
+  completedAt     DateTime? @map("completed_at")
+  triggeredBy     String   @map("triggered_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([collectorId, createdAt(sort: Desc)])
+  @@index([status])
+  @@map("import_logs")
+}
+
+model AuditLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  domain        String
+  entityType    String   @map("entity_type")
+  entityId      String   @map("entity_id")
+  action        String
+  changedFields Json?    @map("changed_fields")
+  sourceUrl     String?  @map("source_url")
+  importId      String?  @map("import_id") @db.Uuid
+  performedBy   String   @map("performed_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([domain, createdAt(sort: Desc)])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
+
+model DataSource {
+  id          String   @id @default(uuid()) @db.Uuid
+  domain      String
+  type        String
+  priority    Int
+  url         String
+  name        String
+  authType    String   @map("auth_type")
+  isAvailable Boolean  @default(true) @map("is_available")
+  lastChecked DateTime? @map("last_checked")
+  rateLimit   Json?    @map("rate_limit")
+  headers     Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([domain, url])
+  @@map("data_sources")
+}
+
+model SyncSchedule {
+  id            String   @id @default(uuid()) @db.Uuid
+  collectorId   String   @unique @map("collector_id")
+  domain        String
+  cronExpression String  @map("cron_expression")
+  maxRetries    Int      @default(3) @map("max_retries")
+  retryDelayMs  Int      @default(60000) @map("retry_delay_ms")
+  timeoutMs     Int      @default(600000) @map("timeout_ms")
+  enabled       Boolean  @default(true)
+  lastSyncAt    DateTime? @map("last_sync_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("sync_schedules")
+}
+
+model FailedJob {
+  id          String   @id @default(uuid()) @db.Uuid
+  collectorId String   @map("collector_id")
+  importLogId String   @map("import_log_id") @db.Uuid
+  attempts    Int      @default(1)
+  lastError   String   @map("last_error")
+  nextRetryAt DateTime? @map("next_retry_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([nextRetryAt])
+  @@map("failed_jobs")
+}
+
+model DeadLetterRecord {
+  id          String   @id @default(uuid()) @db.Uuid
+  collectorId String   @map("collector_id")
+  importLogId String   @map("import_log_id") @db.Uuid
+  error       String
+  attempts    Int
+  payload     Json?
+  failedAt    DateTime @default(now()) @map("failed_at")
+
+  @@map("dead_letter_records")
+}

@@ -1,0 +1,380 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  phone        String   @unique
+  email        String?  @unique
+  passwordHash String?  @map("password_hash")
+  isVerified   Boolean  @default(false) @map("is_verified")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  roles    UserRole[]
+  profiles Profile[]
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  permissions Json     @default("[]")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  users UserRole[]
+}
+
+model UserRole {
+  userId String @map("user_id") @db.Uuid
+  roleId String @map("role_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Profile {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @unique @map("user_id") @db.Uuid
+  fullName    String?  @map("full_name")
+  avatarUrl   String?  @map("avatar_url")
+  phone       String?
+  email       String?
+  dateOfBirth DateTime? @map("date_of_birth")
+  gender      String?
+  language    String   @default("ar")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Governorate {
+  id       String @id @default(uuid()) @db.Uuid
+  nameAr   String @map("name_ar")
+  nameEn   String @map("name_en")
+  code     String? @unique
+  latitude  Decimal? @db.Decimal(10, 7)
+  longitude Decimal? @db.Decimal(10, 7)
+  isActive  Boolean @default(true) @map("is_active")
+
+  cities City[]
+}
+
+model City {
+  id             String @id @default(uuid()) @db.Uuid
+  governorateId  String @map("governorate_id") @db.Uuid
+  nameAr         String @map("name_ar")
+  nameEn         String @map("name_en")
+  latitude        Decimal? @db.Decimal(10, 7)
+  longitude       Decimal? @db.Decimal(10, 7)
+
+  governorate Governorate @relation(fields: [governorateId], references: [id])
+  areas       Area[]
+}
+
+model Area {
+  id        String  @id @default(uuid()) @db.Uuid
+  cityId    String  @map("city_id") @db.Uuid
+  nameAr    String  @map("name_ar")
+  nameEn    String? @map("name_en")
+  postalCode String? @map("postal_code")
+  latitude   Decimal? @db.Decimal(10, 7)
+  longitude  Decimal? @db.Decimal(10, 7)
+
+  city City @relation(fields: [cityId], references: [id])
+}
+
+model Bank {
+  id         String   @id @default(uuid()) @db.Uuid
+  nameAr     String   @map("name_ar")
+  nameEn     String?  @map("name_en")
+  code       String   @unique
+  logoUrl    String?  @map("logo_url")
+  website    String?
+  phone      String?
+  email      String?
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  branches BankBranch[]
+
+  @@map("banks")
+}
+
+model BankBranch {
+  id            String   @id @default(uuid()) @db.Uuid
+  bankId        String   @map("bank_id") @db.Uuid
+  nameAr        String   @map("name_ar")
+  nameEn        String?  @map("name_en")
+  branchCode    String?  @map("branch_code")
+  governorateId String   @map("governorate_id") @db.Uuid
+  cityId        String   @map("city_id") @db.Uuid
+  areaId        String?  @map("area_id") @db.Uuid
+  street        String?
+  latitude      Decimal  @db.Decimal(10, 7)
+  longitude     Decimal  @db.Decimal(10, 7)
+  phone         String?
+  hasAtm        Boolean  @default(false) @map("has_atm")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  bank         Bank              @relation(fields: [bankId], references: [id])
+  workingHours BankWorkingHours[]
+  services     BankBranchService[]
+
+  @@index([latitude, longitude])
+  @@map("bank_branches")
+}
+
+model BankWorkingHours {
+  id         String  @id @default(uuid()) @db.Uuid
+  branchId   String  @map("branch_id") @db.Uuid
+  dayOfWeek  Int     @map("day_of_week")
+  opensAt    String  @map("opens_at")
+  closesAt   String  @map("closes_at")
+  isClosed   Boolean @default(false) @map("is_closed")
+
+  branch BankBranch @relation(fields: [branchId], references: [id])
+
+  @@map("bank_working_hours")
+}
+
+model BankBranchService {
+  id            String  @id @default(uuid()) @db.Uuid
+  branchId      String  @map("branch_id") @db.Uuid
+  serviceNameAr String  @map("service_name_ar")
+  serviceNameEn String? @map("service_name_en")
+  description   String?
+  isAvailable   Boolean @default(true) @map("is_available")
+
+  branch BankBranch @relation(fields: [branchId], references: [id])
+
+  @@map("bank_branch_services")
+}
+
+model Pharmacy {
+  id             String   @id @default(uuid()) @db.Uuid
+  nameAr         String   @map("name_ar")
+  nameEn         String?  @map("name_en")
+  licenseNumber  String?  @unique @map("license_number")
+  governorateId  String   @map("governorate_id") @db.Uuid
+  cityId         String   @map("city_id") @db.Uuid
+  areaId         String?  @map("area_id") @db.Uuid
+  street         String?
+  latitude       Decimal  @db.Decimal(10, 7)
+  longitude      Decimal  @db.Decimal(10, 7)
+  phone          String?
+  whatsapp       String?
+  is24h          Boolean  @default(false) @map("is_24h")
+  hasDelivery    Boolean  @default(false) @map("has_delivery")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  workingHours PharmacyWorkingHours[]
+
+  @@index([latitude, longitude])
+  @@map("pharmacies")
+}
+
+model PharmacyWorkingHours {
+  id         String  @id @default(uuid()) @db.Uuid
+  pharmacyId String  @map("pharmacy_id") @db.Uuid
+  dayOfWeek  Int     @map("day_of_week")
+  opensAt    String? @map("opens_at")
+  closesAt   String? @map("closes_at")
+  isClosed   Boolean @default(false) @map("is_closed")
+  is24h      Boolean @default(false) @map("is_24h")
+
+  pharmacy Pharmacy @relation(fields: [pharmacyId], references: [id])
+
+  @@map("pharmacy_working_hours")
+}
+
+model Hospital {
+  id             String   @id @default(uuid()) @db.Uuid
+  nameAr         String   @map("name_ar")
+  nameEn         String?  @map("name_en")
+  type           String   @default("hospital")
+  ownership      String   @default("public")
+  governorateId  String   @map("governorate_id") @db.Uuid
+  cityId         String   @map("city_id") @db.Uuid
+  areaId         String?  @map("area_id") @db.Uuid
+  street         String?
+  latitude       Decimal  @db.Decimal(10, 7)
+  longitude      Decimal  @db.Decimal(10, 7)
+  phone          String?
+  email          String?
+  website        String?
+  hasEmergency   Boolean  @default(false) @map("has_emergency")
+  bedCount       Int?     @map("bed_count")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  departments HospitalDepartment[]
+  doctors     Doctor[]
+
+  @@index([latitude, longitude])
+  @@map("hospitals")
+}
+
+model HospitalDepartment {
+  id         String   @id @default(uuid()) @db.Uuid
+  hospitalId String   @map("hospital_id") @db.Uuid
+  nameAr     String   @map("name_ar")
+  nameEn     String?  @map("name_en")
+  description String?
+  floor      String?
+  phone      String?
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id])
+
+  @@map("hospital_departments")
+}
+
+model Doctor {
+  id              String   @id @default(uuid()) @db.Uuid
+  hospitalId      String   @map("hospital_id") @db.Uuid
+  departmentId    String?  @map("department_id") @db.Uuid
+  nameAr          String   @map("name_ar")
+  nameEn          String?  @map("name_en")
+  specialtyAr     String   @map("specialty_ar")
+  specialtyEn     String?  @map("specialty_en")
+  title           String?
+  phone           String?
+  email           String?
+  consultationFee Decimal? @map("consultation_fee") @db.Decimal(10, 2)
+  isActive        Boolean  @default(true) @map("is_active")
+
+  hospital   Hospital            @relation(fields: [hospitalId], references: [id])
+  department HospitalDepartment? @relation(fields: [departmentId], references: [id])
+
+  @@map("doctors")
+}
+
+model GovernmentOffice {
+  id            String   @id @default(uuid()) @db.Uuid
+  type          String   @default("other")
+  nameAr        String   @map("name_ar")
+  nameEn        String?  @map("name_en")
+  officeCode    String?  @map("office_code")
+  governorateId String   @map("governorate_id") @db.Uuid
+  cityId        String   @map("city_id") @db.Uuid
+  areaId        String?  @map("area_id") @db.Uuid
+  street        String?
+  latitude      Decimal  @db.Decimal(10, 7)
+  longitude     Decimal  @db.Decimal(10, 7)
+  phone         String?
+  email         String?
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  services GovernmentService[]
+
+  @@index([latitude, longitude])
+  @@map("government_offices")
+}
+
+model GovernmentService {
+  id             String   @id @default(uuid()) @db.Uuid
+  officeId       String   @map("office_id") @db.Uuid
+  serviceNameAr  String   @map("service_name_ar")
+  serviceNameEn  String?  @map("service_name_en")
+  description    String?
+  fee            Decimal? @db.Decimal(10, 2)
+  processingTime String?  @map("processing_time")
+  requiredDocs   Json?    @map("required_docs")
+  isOnline       Boolean  @default(false) @map("is_online")
+  isActive       Boolean  @default(true) @map("is_active")
+
+  office GovernmentOffice @relation(fields: [officeId], references: [id])
+
+  @@map("government_services")
+}
+
+model TransportStation {
+  id               String   @id @default(uuid()) @db.Uuid
+  type             String   @default("metro")
+  nameAr           String   @map("name_ar")
+  nameEn           String?  @map("name_en")
+  code             String?
+  lineName         String?  @map("line_name")
+  governorateId    String   @map("governorate_id") @db.Uuid
+  cityId           String   @map("city_id") @db.Uuid
+  latitude         Decimal  @db.Decimal(10, 7)
+  longitude        Decimal  @db.Decimal(10, 7)
+  hasParking       Boolean  @default(false) @map("has_parking")
+  hasAccessibility Boolean  @default(false) @map("has_accessibility")
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  routesFrom TransportRoute[] @relation("fromStation")
+  routesTo   TransportRoute[] @relation("toStation")
+
+  @@index([latitude, longitude])
+  @@map("transport_stations")
+}
+
+model TransportRoute {
+  id            String   @id @default(uuid()) @db.Uuid
+  type          String   @default("metro")
+  nameAr        String   @map("name_ar")
+  nameEn        String?  @map("name_en")
+  fromStationId String   @map("from_station_id") @db.Uuid
+  toStationId   String   @map("to_station_id") @db.Uuid
+  distanceKm    Decimal? @map("distance_km") @db.Decimal(8, 2)
+  durationMin   Int?     @map("duration_min")
+  fare          Decimal? @db.Decimal(8, 2)
+  isActive      Boolean  @default(true) @map("is_active")
+
+  fromStation TransportStation @relation("fromStation", fields: [fromStationId], references: [id])
+  toStation   TransportStation @relation("toStation", fields: [toStationId], references: [id])
+
+  @@map("transport_routes")
+}
+
+model EmergencyContact {
+  id             String   @id @default(uuid()) @db.Uuid
+  type           String   @default("police")
+  nameAr         String   @map("name_ar")
+  nameEn         String?  @map("name_en")
+  hotline        String
+  alternatePhone String?  @map("alternate_phone")
+  governorateId  String?  @map("governorate_id") @db.Uuid
+  cityId         String?  @map("city_id") @db.Uuid
+  latitude       Decimal? @db.Decimal(10, 7)
+  longitude      Decimal? @db.Decimal(10, 7)
+  isNational     Boolean  @default(false) @map("is_national")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([latitude, longitude])
+  @@map("emergency_contacts")
+}
+
+model EmergencyAlert {
+  id           String   @id @default(uuid()) @db.Uuid
+  titleAr      String   @map("title_ar")
+  titleEn      String?  @map("title_en")
+  description  String
+  severity     String   @default("info")
+  affectedAreas Json    @map("affected_areas")
+  isActive     Boolean  @default(true) @map("is_active")
+  expiresAt    DateTime? @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("emergency_alerts")
+}
