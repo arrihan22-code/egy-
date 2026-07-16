@@ -125,7 +125,8 @@ export default function SearchBar() {
             marginTop: '0.25rem',
           }}
         >
-          {suggestions.map((s, i) => (
+          {suggestions.map(function(s, i) {
+            return (
             <div
               key={`${s.type}_${s.id}_${i}`}
               onClick={() => {
@@ -148,7 +149,7 @@ export default function SearchBar() {
               <span>{s.text}</span>
               <span style={{ fontSize: '0.75rem', color: '#6b7280', marginRight: 'auto' }}>{s.type}</span>
             </div>
-          )}
+          )})}
         </div>
       )}
     </div>
