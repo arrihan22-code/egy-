@@ -9,6 +9,7 @@ const SERVICES: Record<string, string> = {
   '/api/v1/transport': process.env.TRANSPORT_SERVICE_URL || 'http://localhost:3040',
   '/api/v1/emergency': process.env.EMERGENCY_SERVICE_URL || 'http://localhost:3050',
   '/api/v1/search': process.env.SEARCH_SERVICE_URL || 'http://localhost:3060',
+  '/api/v1/maps': process.env.MAPS_SERVICE_URL || 'http://localhost:3070',
 };
 
 @Module({})
