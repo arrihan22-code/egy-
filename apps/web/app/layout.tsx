@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import SearchBar from './components/SearchBar';
+import NotificationBell from './components/NotificationBell';
 
 export const metadata: Metadata = {
   title: 'Egypt Services Platform',
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="/transport">Transport</a>
               <a href="/emergency" style={{ color: '#dc2626' }}>Emergency</a>
             </div>
+            <NotificationBell />
           </nav>
         </header>
         <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem' }}>

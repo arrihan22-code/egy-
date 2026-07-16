@@ -429,3 +429,47 @@ model ReviewPhoto {
   @@index([reviewId])
   @@map("review_photos")
 }
+
+model Notification {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  type       String   @default("info")
+  channel    String   @default("in_app")
+  title      String
+  body       String?
+  metadata   Json?
+  isRead     Boolean  @default(false) @map("is_read")
+  readAt     DateTime? @map("read_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  logs NotificationLog[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model NotificationLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  notificationId String   @map("notification_id") @db.Uuid
+  channel        String   @default("in_app")
+  status         String   @default("pending")
+  error          String?
+  sentAt         DateTime? @map("sent_at")
+
+  notification Notification @relation(fields: [notificationId], references: [id])
+
+  @@index([notificationId])
+  @@map("notification_logs")
+}
+
+model NotificationPreference {
+  id        String  @id @default(uuid()) @db.Uuid
+  userId    String  @unique @map("user_id") @db.Uuid
+  push      Boolean @default(true)
+  email     Boolean @default(false)
+  sms       Boolean @default(false)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("notification_preferences")
+}
