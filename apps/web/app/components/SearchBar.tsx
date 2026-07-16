@@ -141,8 +141,8 @@ export default function SearchBar() {
                 alignItems: 'center',
                 gap: '0.5rem',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'white')}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#f9fafb'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'white'; }}
             >
               <span>{TYPE_ICONS[s.type] || '📌'}</span>
               <span>{s.text}</span>
