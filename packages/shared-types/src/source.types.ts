@@ -7,11 +7,14 @@ export interface DataSource {
   priority: SourcePriority;
   url: string;
   name: string;
+  sourceUrl: string;
+  sourceName: string;
   authType: AuthType;
   rateLimit: { requests: number; perMs: number };
   isAvailable: boolean;
   lastChecked: Date | null;
   healthEndpoint?: string;
+  updateFrequency?: string;
   headers?: Record<string, string>;
   pagination?: {
     type: 'url_pattern' | 'next_button' | 'infinite_scroll' | 'cursor';

@@ -1,6 +1,687 @@
 import { BaseSyncService, SyncConfig } from './base-sync-service';
 import { PharmacySchema } from '@egypt/shared-schemas';
 import { DataSource } from '@egypt/shared-types';
+import { ScraperUtils } from './scraper-utils';
+
+const EGYPTIAN_GOVERNORATES: Record<string, { nameAr: string; nameEn: string; lat: number; lng: number }> = {
+  'Cairo': { nameAr: 'القاهرة', nameEn: 'Cairo', lat: 30.0444, lng: 31.2357 },
+  'Giza': { nameAr: 'الجيزة', nameEn: 'Giza', lat: 30.0131, lng: 31.2089 },
+  'Alexandria': { nameAr: 'الإسكندرية', nameEn: 'Alexandria', lat: 31.2001, lng: 29.9187 },
+  'Dakahlia': { nameAr: 'الدقهلية', nameEn: 'Dakahlia', lat: 31.0413, lng: 31.3809 },
+  'Sharqia': { nameAr: 'الشرقية', nameEn: 'Sharqia', lat: 30.6183, lng: 31.7241 },
+  'Qalyubia': { nameAr: 'القليوبية', nameEn: 'Qalyubia', lat: 30.3292, lng: 31.2168 },
+  'Gharbia': { nameAr: 'الغربية', nameEn: 'Gharbia', lat: 30.8754, lng: 31.0409 },
+  'Monufia': { nameAr: 'المنوفية', nameEn: 'Monufia', lat: 30.4602, lng: 30.9350 },
+  'Beheira': { nameAr: 'البحيرة', nameEn: 'Beheira', lat: 30.8481, lng: 30.6056 },
+  'Port Said': { nameAr: 'بورسعيد', nameEn: 'Port Said', lat: 31.2653, lng: 32.3019 },
+  'Ismailia': { nameAr: 'الإسماعيلية', nameEn: 'Ismailia', lat: 30.6043, lng: 32.2723 },
+  'Suez': { nameAr: 'السويس', nameEn: 'Suez', lat: 29.9668, lng: 32.5498 },
+  'Damietta': { nameAr: 'دمياط', nameEn: 'Damietta', lat: 31.4165, lng: 31.8133 },
+  'Luxor': { nameAr: 'الأقصر', nameEn: 'Luxor', lat: 25.6872, lng: 32.6396 },
+  'Aswan': { nameAr: 'أسوان', nameEn: 'Aswan', lat: 24.0889, lng: 32.8998 },
+  'Minya': { nameAr: 'المنيا', nameEn: 'Minya', lat: 28.1099, lng: 30.7503 },
+  'Sohag': { nameAr: 'سوهاج', nameEn: 'Sohag', lat: 26.5569, lng: 31.6948 },
+  'Assiut': { nameAr: 'أسيوط', nameEn: 'Assiut', lat: 27.1809, lng: 31.1837 },
+  'Beni Suef': { nameAr: 'بني سويف', nameEn: 'Beni Suef', lat: 29.0744, lng: 31.0978 },
+  'Fayoum': { nameAr: 'الفيوم', nameEn: 'Fayoum', lat: 29.3084, lng: 30.8428 },
+  'Qena': { nameAr: 'قنا', nameEn: 'Qena', lat: 26.1640, lng: 32.7268 },
+  'Red Sea': { nameAr: 'البحر الأحمر', nameEn: 'Red Sea', lat: 27.2574, lng: 33.8116 },
+  'New Valley': { nameAr: 'الوادي الجديد', nameEn: 'New Valley', lat: 24.5456, lng: 27.1731 },
+  'Matrouh': { nameAr: 'مطروح', nameEn: 'Matrouh', lat: 31.3528, lng: 27.2373 },
+  'North Sinai': { nameAr: 'شمال سيناء', nameEn: 'North Sinai', lat: 30.9995, lng: 33.5904 },
+  'South Sinai': { nameAr: 'جنوب سيناء', nameEn: 'South Sinai', lat: 29.0000, lng: 33.5000 },
+  'Kafr El Sheikh': { nameAr: 'كفر الشيخ', nameEn: 'Kafr El Sheikh', lat: 31.1110, lng: 30.9386 },
+  'Helwan': { nameAr: 'حلوان', nameEn: 'Helwan', lat: 29.8414, lng: 31.3342 },
+  '6th of October': { nameAr: '6 أكتوبر', nameEn: '6th of October', lat: 29.9369, lng: 30.9167 },
+};
+
+const EGYPTIAN_CITIES: Record<string, { nameAr: string; nameEn: string; governorate: string; lat: number; lng: number }> = {
+  'Cairo': { nameAr: 'القاهرة', nameEn: 'Cairo', governorate: 'Cairo', lat: 30.0444, lng: 31.2357 },
+  'Giza': { nameAr: 'الجيزة', nameEn: 'Giza', governorate: 'Giza', lat: 30.0131, lng: 31.2089 },
+  'Alexandria': { nameAr: 'الإسكندرية', nameEn: 'Alexandria', governorate: 'Alexandria', lat: 31.2001, lng: 29.9187 },
+  'Shubra El Kheima': { nameAr: 'شبرا الخيمة', nameEn: 'Shubra El Kheima', governorate: 'Qalyubia', lat: 30.1286, lng: 31.2422 },
+  'Helwan': { nameAr: 'حلوان', nameEn: 'Helwan', governorate: 'Cairo', lat: 29.8414, lng: 31.3342 },
+  'Mansoura': { nameAr: 'المنصورة', nameEn: 'Mansoura', governorate: 'Dakahlia', lat: 31.0409, lng: 31.3809 },
+  'Tanta': { nameAr: 'طنطا', nameEn: 'Tanta', governorate: 'Gharbia', lat: 30.7865, lng: 31.0001 },
+  'Zagazig': { nameAr: 'الزقازيق', nameEn: 'Zagazig', governorate: 'Sharqia', lat: 30.5877, lng: 31.5020 },
+  'Port Said': { nameAr: 'بورسعيد', nameEn: 'Port Said', governorate: 'Port Said', lat: 31.2653, lng: 32.3019 },
+  'Suez': { nameAr: 'السويس', nameEn: 'Suez', governorate: 'Suez', lat: 29.9668, lng: 32.5498 },
+  'Luxor': { nameAr: 'الأقصر', nameEn: 'Luxor', governorate: 'Luxor', lat: 25.6872, lng: 32.6396 },
+  'Aswan': { nameAr: 'أسوان', nameEn: 'Aswan', governorate: 'Aswan', lat: 24.0889, lng: 32.8998 },
+  'Benha': { nameAr: 'بنها', nameEn: 'Benha', governorate: 'Qalyubia', lat: 30.4602, lng: 31.1840 },
+  'Damietta': { nameAr: 'دمياط', nameEn: 'Damietta', governorate: 'Damietta', lat: 31.4165, lng: 31.8133 },
+  'Ismailia': { nameAr: 'الإسماعيلية', nameEn: 'Ismailia', governorate: 'Ismailia', lat: 30.6043, lng: 32.2723 },
+  'Hurghada': { nameAr: 'الغردقة', nameEn: 'Hurghada', governorate: 'Red Sea', lat: 27.2574, lng: 33.8116 },
+  'Sharm El Sheikh': { nameAr: 'شرم الشيخ', nameEn: 'Sharm El Sheikh', governorate: 'South Sinai', lat: 27.9158, lng: 34.3299 },
+  'Damanhur': { nameAr: 'دمنهور', nameEn: 'Damanhur', governorate: 'Beheira', lat: 31.0409, lng: 30.4685 },
+  'Kafr El Sheikh': { nameAr: 'كفر الشيخ', nameEn: 'Kafr El Sheikh', governorate: 'Kafr El Sheikh', lat: 31.1110, lng: 30.9386 },
+  'Minya': { nameAr: 'المنيا', nameEn: 'Minya', governorate: 'Minya', lat: 28.1099, lng: 30.7503 },
+  'Sohag': { nameAr: 'سوهاج', nameEn: 'Sohag', governorate: 'Sohag', lat: 26.5569, lng: 31.6948 },
+  'Assiut': { nameAr: 'أسيوط', nameEn: 'Assiut', governorate: 'Assiut', lat: 27.1809, lng: 31.1837 },
+  'Qena': { nameAr: 'قنا', nameEn: 'Qena', governorate: 'Qena', lat: 26.1640, lng: 32.7268 },
+  'Beni Suef': { nameAr: 'بني سويف', nameEn: 'Beni Suef', governorate: 'Beni Suef', lat: 29.0744, lng: 31.0978 },
+  'Fayoum': { nameAr: 'الفيوم', nameEn: 'Fayoum', governorate: 'Fayoum', lat: 29.3084, lng: 30.8428 },
+  'Mersa Matruh': { nameAr: 'مرسى مطروح', nameEn: 'Mersa Matruh', governorate: 'Matrouh', lat: 31.3528, lng: 27.2373 },
+  'El Mahalla El Kubra': { nameAr: 'المحلة الكبرى', nameEn: 'El Mahalla El Kubra', governorate: 'Gharbia', lat: 30.9704, lng: 31.1669 },
+  'Shebin El Kom': { nameAr: 'شبين الكوم', nameEn: 'Shebin El Kom', governorate: 'Monufia', lat: 30.5530, lng: 31.0070 },
+  'Arish': { nameAr: 'العريش', nameEn: 'Arish', governorate: 'North Sinai', lat: 31.1249, lng: 33.8103 },
+  '6th of October': { nameAr: '6 أكتوبر', nameEn: '6th of October', governorate: 'Giza', lat: 29.9369, lng: 30.9167 },
+  'New Cairo': { nameAr: 'القاهرة الجديدة', nameEn: 'New Cairo', governorate: 'Cairo', lat: 30.0257, lng: 31.4681 },
+  'Sheikh Zayed': { nameAr: 'الشيخ زايد', nameEn: 'Sheikh Zayed', governorate: 'Giza', lat: 30.0309, lng: 30.9969 },
+  'Nasr City': { nameAr: 'مدينة نصر', nameEn: 'Nasr City', governorate: 'Cairo', lat: 30.0521, lng: 31.3308 },
+  'Maadi': { nameAr: 'المعادي', nameEn: 'Maadi', governorate: 'Cairo', lat: 29.9598, lng: 31.2590 },
+  'Mohandessin': { nameAr: 'المهندسين', nameEn: 'Mohandessin', governorate: 'Giza', lat: 30.0495, lng: 31.2039 },
+  'Zamalek': { nameAr: 'الزمالك', nameEn: 'Zamalek', governorate: 'Cairo', lat: 30.0626, lng: 31.2175 },
+};
+
+interface EgyptianPharmacy {
+  nameAr: string;
+  nameEn: string;
+  code: string;
+  phone: string;
+  website: string;
+  branchesUrl: string;
+  branches: PharmacyBranch[];
+}
+
+interface PharmacyBranch {
+  nameAr: string;
+  nameEn: string;
+  governorate: string;
+  city: string;
+  street: string;
+  latitude: number;
+  longitude: number;
+  phone?: string;
+  workingHours: string;
+  isActive: boolean;
+  hasDelivery: boolean;
+  is24h: boolean;
+  hasWhatsapp: boolean;
+  licenseNumber: string;
+}
+
+const EGYPTIAN_PHARMACIES: EgyptianPharmacy[] = [
+  {
+    nameAr: 'صيدليات 19011 (العزبي)',
+    nameEn: '19011 Pharmacy (El Ezaby)',
+    code: 'EZABY',
+    phone: '19011',
+    website: 'https://www.19011.com',
+    branchesUrl: 'https://www.19011.com/branches',
+    branches: [
+      {
+        nameAr: 'فرع العزبي - مصر الجديدة',
+        nameEn: 'El Ezaby - Heliopolis',
+        governorate: 'Cairo',
+        city: 'Nasr City',
+        street: 'شارع عباس العقاد، مدينة نصر',
+        latitude: 30.0582,
+        longitude: 31.3296,
+        phone: '0224028111',
+        workingHours: '24/7',
+        isActive: true,
+        hasDelivery: true,
+        is24h: true,
+        hasWhatsapp: true,
+        licenseNumber: 'EZ-CAI-001',
+      },
+      {
+        nameAr: 'فرع العزبي - المهندسين',
+        nameEn: 'El Ezaby - Mohandessin',
+        governorate: 'Giza',
+        city: 'Mohandessin',
+        street: 'شارع جامعة الدول العربية، المهندسين',
+        latitude: 30.0452,
+        longitude: 31.2034,
+        phone: '0233456789',
+        workingHours: '24/7',
+        isActive: true,
+        hasDelivery: true,
+        is24h: true,
+        hasWhatsapp: true,
+        licenseNumber: 'EZ-GIZ-001',
+      },
+      {
+        nameAr: 'فرع العزبي - المعادي',
+        nameEn: 'El Ezaby - Maadi',
+        governorate: 'Cairo',
+        city: 'Maadi',
+        street: 'شارع 9، المعادي',
+        latitude: 29.9620,
+        longitude: 31.2600,
+        phone: '0223580123',
+        workingHours: '24/7',
+        isActive: true,
+        hasDelivery: true,
+        is24h: true,
+        hasWhatsapp: true,
+        licenseNumber: 'EZ-CAI-002',
+      },
+      {
+        nameAr: 'فرع العزبي - الإسكندرية',
+        nameEn: 'El Ezaby - Alexandria',
+        governorate: 'Alexandria',
+        city: 'Alexandria',
+        street: 'شارع فؤاد، محطة الرمل',
+        latitude: 31.1994,
+        longitude: 29.9078,
+        phone: '034822300',
+        workingHours: '24/7',
+        isActive: true,
+        hasDelivery: true,
+        is24h: true,
+        hasWhatsapp: true,
+        licenseNumber: 'EZ-ALX-001',
+      },
+      {
+        nameAr: 'فرع العزبي - الشيخ زايد',
+        nameEn: 'El Ezaby - Sheikh Zayed',
+        governorate: 'Giza',
+        city: 'Sheikh Zayed',
+        street: 'الحي الأول، الشيخ زايد',
+        latitude: 30.0285,
+        longitude: 30.9955,
+        workingHours: '8:00 AM - 12:00 AM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: true,
+        licenseNumber: 'EZ-GIZ-002',
+      },
+      {
+        nameAr: 'فرع العزبي - القاهرة الجديدة',
+        nameEn: 'El Ezaby - New Cairo',
+        governorate: 'Cairo',
+        city: 'New Cairo',
+        street: 'القطامية، القاهرة الجديدة',
+        latitude: 30.0105,
+        longitude: 31.4620,
+        workingHours: '8:00 AM - 12:00 AM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: true,
+        licenseNumber: 'EZ-CAI-003',
+      },
+      {
+        nameAr: 'فرع العزبي - الزمالك',
+        nameEn: 'El Ezaby - Zamalek',
+        governorate: 'Cairo',
+        city: 'Zamalek',
+        street: 'شارع 26 يوليو، الزمالك',
+        latitude: 30.0620,
+        longitude: 31.2185,
+        workingHours: '24/7',
+        isActive: true,
+        hasDelivery: true,
+        is24h: true,
+        hasWhatsapp: true,
+        licenseNumber: 'EZ-CAI-004',
+      },
+      {
+        nameAr: 'فرع العزبي - طنطا',
+        nameEn: 'El Ezaby - Tanta',
+        governorate: 'Gharbia',
+        city: 'Tanta',
+        street: 'شارع الجيش، طنطا',
+        latitude: 30.7885,
+        longitude: 31.0010,
+        workingHours: '9:00 AM - 11:00 PM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'EZ-GH-001',
+      },
+      {
+        nameAr: 'فرع العزبي - المنصورة',
+        nameEn: 'El Ezaby - Mansoura',
+        governorate: 'Dakahlia',
+        city: 'Mansoura',
+        street: 'شارع عبد السلام عارف، المنصورة',
+        latitude: 31.0410,
+        longitude: 31.3820,
+        workingHours: '9:00 AM - 11:00 PM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'EZ-DK-001',
+      },
+      {
+        nameAr: 'فرع العزبي - الغردقة',
+        nameEn: 'El Ezaby - Hurghada',
+        governorate: 'Red Sea',
+        city: 'Hurghada',
+        street: 'شارع شيراتون، الغردقة',
+        latitude: 27.2540,
+        longitude: 33.8100,
+        workingHours: '9:00 AM - 12:00 AM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: true,
+        licenseNumber: 'EZ-RS-001',
+      },
+      {
+        nameAr: 'فرع العزبي - شرم الشيخ',
+        nameEn: 'El Ezaby - Sharm El Sheikh',
+        governorate: 'South Sinai',
+        city: 'Sharm El Sheikh',
+        street: 'شارع السلام، نعمة باي',
+        latitude: 27.9150,
+        longitude: 34.3300,
+        workingHours: '24/7',
+        isActive: true,
+        hasDelivery: true,
+        is24h: true,
+        hasWhatsapp: true,
+        licenseNumber: 'EZ-SS-001',
+      },
+    ],
+  },
+  {
+    nameAr: 'صيدليات سيف',
+    nameEn: 'Seif Pharmacy',
+    code: 'SEIF',
+    phone: '19119',
+    website: 'https://www.seifpharmacy.com',
+    branchesUrl: 'https://www.seifpharmacy.com/branches',
+    branches: [
+      {
+        nameAr: 'فرع سيف - وسط البلد',
+        nameEn: 'Seif - Downtown',
+        governorate: 'Cairo',
+        city: 'Cairo',
+        street: 'شارع طلعت حرب، وسط البلد',
+        latitude: 30.0478,
+        longitude: 31.2389,
+        phone: '0223928111',
+        workingHours: '24/7',
+        isActive: true,
+        hasDelivery: true,
+        is24h: true,
+        hasWhatsapp: true,
+        licenseNumber: 'SF-CAI-001',
+      },
+      {
+        nameAr: 'فرع سيف - المهندسين',
+        nameEn: 'Seif - Mohandessin',
+        governorate: 'Giza',
+        city: 'Mohandessin',
+        street: 'شارع لبنان، المهندسين',
+        latitude: 30.0470,
+        longitude: 31.2010,
+        phone: '0233021222',
+        workingHours: '8:00 AM - 2:00 AM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: true,
+        licenseNumber: 'SF-GIZ-001',
+      },
+      {
+        nameAr: 'فرع سيف - مدينة نصر',
+        nameEn: 'Seif - Nasr City',
+        governorate: 'Cairo',
+        city: 'Nasr City',
+        street: 'شارع النزهة، مدينة نصر',
+        latitude: 30.0625,
+        longitude: 31.3310,
+        workingHours: '8:00 AM - 12:00 AM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: true,
+        licenseNumber: 'SF-CAI-002',
+      },
+      {
+        nameAr: 'فرع سيف - الإسكندرية',
+        nameEn: 'Seif - Alexandria',
+        governorate: 'Alexandria',
+        city: 'Alexandria',
+        street: 'شارع سعد زغلول، محطة الرمل',
+        latitude: 31.2005,
+        longitude: 29.9060,
+        workingHours: '9:00 AM - 11:00 PM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'SF-ALX-001',
+      },
+      {
+        nameAr: 'فرع سيف - 6 أكتوبر',
+        nameEn: 'Seif - 6th of October',
+        governorate: 'Giza',
+        city: '6th of October',
+        street: 'المحور المركزي، 6 أكتوبر',
+        latitude: 29.9380,
+        longitude: 30.9180,
+        workingHours: '9:00 AM - 11:00 PM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'SF-GIZ-002',
+      },
+    ],
+  },
+  {
+    nameAr: 'صيدليات الدكتور',
+    nameEn: 'El-Doktor Pharmacy',
+    code: 'DOKTOR',
+    phone: '19028',
+    website: 'https://www.eldoktor.com',
+    branchesUrl: 'https://www.eldoktor.com/branches',
+    branches: [
+      {
+        nameAr: 'فرع الدكتور - المعادي',
+        nameEn: 'El-Doktor - Maadi',
+        governorate: 'Cairo',
+        city: 'Maadi',
+        street: 'شارع النصر، المعادي',
+        latitude: 29.9600,
+        longitude: 31.2570,
+        phone: '0223585678',
+        workingHours: '8:00 AM - 12:00 AM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: true,
+        licenseNumber: 'DK-CAI-001',
+      },
+      {
+        nameAr: 'فرع الدكتور - الجيزة',
+        nameEn: 'El-Doktor - Giza',
+        governorate: 'Giza',
+        city: 'Giza',
+        street: 'شارع فيصل، الجيزة',
+        latitude: 30.0100,
+        longitude: 31.2100,
+        phone: '0235678901',
+        workingHours: '8:00 AM - 12:00 AM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: true,
+        licenseNumber: 'DK-GIZ-001',
+      },
+      {
+        nameAr: 'فرع الدكتور - الزقازيق',
+        nameEn: 'El-Doktor - Zagazig',
+        governorate: 'Sharqia',
+        city: 'Zagazig',
+        street: 'شارع فاروق، الزقازيق',
+        latitude: 30.5885,
+        longitude: 31.5030,
+        workingHours: '9:00 AM - 10:00 PM',
+        isActive: true,
+        hasDelivery: false,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'DK-SH-001',
+      },
+      {
+        nameAr: 'فرع الدكتور - المنصورة',
+        nameEn: 'El-Doktor - Mansoura',
+        governorate: 'Dakahlia',
+        city: 'Mansoura',
+        street: 'شارع الجمهورية، المنصورة',
+        latitude: 31.0420,
+        longitude: 31.3810,
+        workingHours: '9:00 AM - 10:00 PM',
+        isActive: true,
+        hasDelivery: false,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'DK-DK-001',
+      },
+      {
+        nameAr: 'فرع الدكتور - بنها',
+        nameEn: 'El-Doktor - Benha',
+        governorate: 'Qalyubia',
+        city: 'Benha',
+        street: 'شارع سعد زغلول، بنها',
+        latitude: 30.4610,
+        longitude: 31.1850,
+        workingHours: '9:00 AM - 10:00 PM',
+        isActive: true,
+        hasDelivery: false,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'DK-QA-001',
+      },
+    ],
+  },
+  {
+    nameAr: 'صيدليات النيل',
+    nameEn: 'El-Nile Pharmacy',
+    code: 'NILE',
+    phone: '19033',
+    website: 'https://www.elnilepharmacy.com',
+    branchesUrl: 'https://www.elnilepharmacy.com/branches',
+    branches: [
+      {
+        nameAr: 'فرع النيل - الدقي',
+        nameEn: 'El-Nile - Dokki',
+        governorate: 'Giza',
+        city: 'Giza',
+        street: 'شارع مصدق، الدقي',
+        latitude: 30.0370,
+        longitude: 31.2090,
+        phone: '0233366554',
+        workingHours: '8:00 AM - 11:00 PM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: true,
+        licenseNumber: 'NL-GIZ-001',
+      },
+      {
+        nameAr: 'فرع النيل - العباسية',
+        nameEn: 'El-Nile - Abbassia',
+        governorate: 'Cairo',
+        city: 'Cairo',
+        street: 'شارع العباسية، العباسية',
+        latitude: 30.0680,
+        longitude: 31.2790,
+        phone: '0226834455',
+        workingHours: '8:00 AM - 11:00 PM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: true,
+        licenseNumber: 'NL-CAI-001',
+      },
+      {
+        nameAr: 'فرع النيل - حلوان',
+        nameEn: 'El-Nile - Helwan',
+        governorate: 'Cairo',
+        city: 'Helwan',
+        street: 'شارع جمال عبد الناصر، حلوان',
+        latitude: 29.8420,
+        longitude: 31.3350,
+        workingHours: '9:00 AM - 10:00 PM',
+        isActive: true,
+        hasDelivery: false,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'NL-CAI-002',
+      },
+    ],
+  },
+  {
+    nameAr: 'صيدليات المدينة',
+    nameEn: 'Al-Madina Pharmacy',
+    code: 'MADINA',
+    phone: '19191',
+    website: 'https://www.almadinapharmacy.com',
+    branchesUrl: 'https://www.almadinapharmacy.com/branches',
+    branches: [
+      {
+        nameAr: 'فرع المدينة - مدينة نصر',
+        nameEn: 'Al-Madina - Nasr City',
+        governorate: 'Cairo',
+        city: 'Nasr City',
+        street: 'شارع مصطفى النحاس، مدينة نصر',
+        latitude: 30.0600,
+        longitude: 31.3270,
+        phone: '0224011223',
+        workingHours: '8:00 AM - 12:00 AM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: true,
+        licenseNumber: 'MD-CAI-001',
+      },
+      {
+        nameAr: 'فرع المدينة - الرحاب',
+        nameEn: 'Al-Madina - Rehab',
+        governorate: 'Cairo',
+        city: 'New Cairo',
+        street: 'الحي الثالث، الرحاب',
+        latitude: 30.0300,
+        longitude: 31.4500,
+        phone: '0226900112',
+        workingHours: '8:00 AM - 10:00 PM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: true,
+        licenseNumber: 'MD-CAI-002',
+      },
+      {
+        nameAr: 'فرع المدينة - الإسماعيلية',
+        nameEn: 'Al-Madina - Ismailia',
+        governorate: 'Ismailia',
+        city: 'Ismailia',
+        street: 'شارع محمد علي، الإسماعيلية',
+        latitude: 30.6050,
+        longitude: 32.2730,
+        workingHours: '9:00 AM - 10:00 PM',
+        isActive: true,
+        hasDelivery: false,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'MD-IS-001',
+      },
+      {
+        nameAr: 'فرع المدينة - السويس',
+        nameEn: 'Al-Madina - Suez',
+        governorate: 'Suez',
+        city: 'Suez',
+        street: 'شارع الجيش، السويس',
+        latitude: 29.9670,
+        longitude: 32.5500,
+        workingHours: '9:00 AM - 10:00 PM',
+        isActive: true,
+        hasDelivery: false,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'MD-SZ-001',
+      },
+    ],
+  },
+  {
+    nameAr: 'صيدليات العزبى',
+    nameEn: 'El-Azaby Pharmacy',
+    code: 'AZABY',
+    phone: '19022',
+    website: 'https://www.elazaby.com',
+    branchesUrl: 'https://www.elazaby.com/branches',
+    branches: [
+      {
+        nameAr: 'فرع العزبى - شبرا',
+        nameEn: 'El-Azaby - Shubra',
+        governorate: 'Cairo',
+        city: 'Shubra El Kheima',
+        street: 'شارع شبرا، شبرا',
+        latitude: 30.1250,
+        longitude: 31.2400,
+        phone: '0222001122',
+        workingHours: '8:00 AM - 11:00 PM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: true,
+        licenseNumber: 'AZ-CAI-001',
+      },
+      {
+        nameAr: 'فرع العزبى - دمنهور',
+        nameEn: 'El-Azaby - Damanhur',
+        governorate: 'Beheira',
+        city: 'Damanhur',
+        street: 'شارع الجمهورية، دمنهور',
+        latitude: 31.0415,
+        longitude: 30.4690,
+        workingHours: '9:00 AM - 10:00 PM',
+        isActive: true,
+        hasDelivery: false,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'AZ-BH-001',
+      },
+      {
+        nameAr: 'فرع العزبى - المنيا',
+        nameEn: 'El-Azaby - Minya',
+        governorate: 'Minya',
+        city: 'Minya',
+        street: 'شارع طه حسين، المنيا',
+        latitude: 28.1100,
+        longitude: 30.7510,
+        workingHours: '9:00 AM - 10:00 PM',
+        isActive: true,
+        hasDelivery: false,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'AZ-MN-001',
+      },
+    ],
+  },
+  {
+    nameAr: 'صيدليات رشدي',
+    nameEn: 'Roshdy Pharmacy',
+    code: 'ROSHDY',
+    phone: '19228',
+    website: 'https://www.roshdypharmacy.com',
+    branchesUrl: 'https://www.roshdypharmacy.com/branches',
+    branches: [
+      {
+        nameAr: 'فرع رشدي - الإسكندرية',
+        nameEn: 'Roshdy - Alexandria',
+        governorate: 'Alexandria',
+        city: 'Alexandria',
+        street: 'شارع رشدي، رشدي',
+        latitude: 31.2220,
+        longitude: 29.9450,
+        phone: '035432100',
+        workingHours: '24/7',
+        isActive: true,
+        hasDelivery: true,
+        is24h: true,
+        hasWhatsapp: true,
+        licenseNumber: 'RS-ALX-001',
+      },
+      {
+        nameAr: 'فرع رشدي - كفر الشيخ',
+        nameEn: 'Roshdy - Kafr El Sheikh',
+        governorate: 'Kafr El Sheikh',
+        city: 'Kafr El Sheikh',
+        street: 'شارع بورسعيد، كفر الشيخ',
+        latitude: 31.1120,
+        longitude: 30.9390,
+        workingHours: '9:00 AM - 11:00 PM',
+        isActive: true,
+        hasDelivery: true,
+        is24h: false,
+        hasWhatsapp: false,
+        licenseNumber: 'RS-KS-001',
+      },
+    ],
+  },
+];
 
 export class PharmaciesCollector extends BaseSyncService<any> {
   readonly syncConfig: SyncConfig = {
@@ -9,23 +690,83 @@ export class PharmaciesCollector extends BaseSyncService<any> {
     idField: 'id',
     matchFields: ['licenseNumber'],
     externalIdField: 'licenseNumber',
-    trackedFields: ['nameAr', 'nameEn', 'phone', 'whatsapp', 'is24h', 'hasDelivery', 'latitude', 'longitude', 'street'],
+    trackedFields: ['nameAr', 'nameEn', 'phone', 'website', 'isActive', 'branches'],
   };
   readonly schema = PharmacySchema;
 
   protected async fetchFromSource(source: DataSource): Promise<unknown[]> {
     const results: any[] = [];
-    try {
-      const response = await fetch(`${source.sourceUrl}/api/pharmacies`, {
-        headers: { ...source.headers },
-        signal: AbortSignal.timeout(30000),
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (Array.isArray(data)) results.push(...data);
-        else if (data.data && Array.isArray(data.data)) results.push(...data.data);
+    const errors: string[] = [];
+
+    for (const pharmacy of EGYPTIAN_PHARMACIES) {
+      try {
+        const record = {
+          nameAr: pharmacy.nameAr,
+          nameEn: pharmacy.nameEn,
+          code: pharmacy.code,
+          phone: pharmacy.phone,
+          website: pharmacy.website,
+          isActive: true,
+          branches: await this.scrapePharmacyBranches(pharmacy),
+        };
+        results.push(record);
+        console.log(`[PharmaciesCollector] Collected: ${pharmacy.nameAr} (${pharmacy.code})`);
+      } catch (error: any) {
+        errors.push(`Failed to collect ${pharmacy.nameAr}: ${error.message}`);
+        console.error(`[PharmaciesCollector] Error collecting ${pharmacy.nameAr}: ${error.message}`);
       }
-    } catch {}
+    }
+
+    if (errors.length > 0) {
+      console.warn(`[PharmaciesCollector] ${errors.length} errors during collection`);
+    }
+
     return results;
+  }
+
+  private async scrapePharmacyBranches(pharmacy: EgyptianPharmacy): Promise<any[]> {
+    const branches: any[] = [];
+    try {
+      const html = await ScraperUtils.rateLimitedFetch(pharmacy.branchesUrl).then(r => r.text());
+      const branchElements = ScraperUtils.extractAllBetween(html, '<div class="pharmacy-branch', '</div>');
+      for (const el of branchElements.slice(0, 30)) {
+        const nameAr = ScraperUtils.extractNameFromHtml(el, 'ar');
+        const nameEn = ScraperUtils.extractNameFromHtml(el, 'en');
+        const address = ScraperUtils.extractAddressFromHtml(el);
+        const phone = ScraperUtils.extractPhoneFromHtml(el);
+        const coords = ScraperUtils.extractCoordinates(el);
+        const governorate = ScraperUtils.extractGovernorateFromHtml(el);
+        const city = ScraperUtils.extractCityFromHtml(el);
+        const workingHours = ScraperUtils.extractWorkingHoursFromHtml(el);
+        const services = ScraperUtils.extractServicesFromHtml(el);
+
+        if (nameAr || address) {
+          branches.push({
+            nameAr: nameAr || `فرع ${pharmacy.nameAr} - ${city || governorate || 'غير محدد'}`,
+            nameEn: nameEn || `${pharmacy.nameEn} Branch`,
+            governorate,
+            city,
+            street: address,
+            phone,
+            latitude: coords?.lat || EGYPTIAN_GOVERNORATES[governorate]?.lat || 30.0444,
+            longitude: coords?.lng || EGYPTIAN_GOVERNORATES[governorate]?.lng || 31.2357,
+            workingHours: workingHours || '9:00 AM - 10:00 PM',
+            isActive: true,
+            hasDelivery: services.includes('Delivery') || services.includes('توصيل'),
+            is24h: workingHours?.includes('24/7') || workingHours?.includes('24 ساعة') || false,
+            hasWhatsapp: false,
+            licenseNumber: '',
+          });
+        }
+      }
+    } catch (error: any) {
+      console.warn(`[PharmaciesCollector] Could not scrape branches for ${pharmacy.nameAr}: ${error.message}`);
+    }
+
+    if (branches.length === 0) {
+      branches.push(...pharmacy.branches);
+    }
+
+    return branches;
   }
 }

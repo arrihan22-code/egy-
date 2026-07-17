@@ -1,4 +1,5 @@
-import { DataSource, NoSourceAvailableError } from './interfaces/source-adapter.interface';
+import { NoSourceAvailableError } from './interfaces/source-adapter.interface';
+import { DataSource } from '@egypt/shared-types';
 
 export class SourceResolver {
   private sources: Map<string, DataSource[]> = new Map();

@@ -71,28 +71,4 @@ export class SchedulerService {
   }
 }
 
-interface SyncSchedule {
-  collectorId: string;
-  domain: string;
-  cronExpression: string;
-  maxRetries: number;
-  retryDelayMs: number;
-  timeoutMs: number;
-  enabled: boolean;
-}
 
-interface SyncResult {
-  collectorId: string;
-  domain: string;
-  sourceUrl: string;
-  sourceName: string;
-  status: 'completed' | 'failed' | 'partial';
-  recordsFetched: number;
-  recordsInserted: number;
-  recordsUpdated: number;
-  recordsUnchanged: number;
-  recordsFailed: number;
-  durationMs: number;
-  errors: unknown[];
-  importLogId: string;
-}

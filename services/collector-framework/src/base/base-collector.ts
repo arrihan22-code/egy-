@@ -1,4 +1,4 @@
-import { BaseCollector as AbstractBase, CollectorMetadata, CollectResult, CollectError } from '@egypt/shared-types';
+import { CollectorMetadata, CollectResult, CollectError } from '@egypt/shared-types';
 
 export abstract class BaseCollector<T> {
   abstract readonly metadata: CollectorMetadata;

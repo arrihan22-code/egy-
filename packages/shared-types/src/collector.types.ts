@@ -12,7 +12,7 @@ export type ImportStatus = 'running' | 'completed' | 'failed' | 'partial';
 
 export type CollectorAction = 'inserted' | 'updated' | 'unchanged' | 'failed';
 
-export type ErrorType = 'network' | 'parse' | 'validation' | 'timeout' | 'auth' | 'rate_limit';
+export type ErrorType = 'network' | 'parse' | 'validation' | 'timeout' | 'auth' | 'rate_limit' | 'sync';
 
 export interface CollectorMetadata {
   id: string;
@@ -87,12 +87,12 @@ export interface SyncResult {
   importLogId: string;
 }
 
-export interface SourcePriority {
+export interface SourcePriorityInfo {
   level: 1 | 2 | 3 | 4 | 5 | 6;
   label: string;
 }
 
-export const SOURCE_PRIORITIES: Record<string, SourcePriority> = {
+export const SOURCE_PRIORITIES: Record<string, SourcePriorityInfo> = {
   OFFICIAL_GOV_API: { level: 1, label: 'Official Government API' },
   OFFICIAL_COMPANY_API: { level: 2, label: 'Official Company API' },
   OFFICIAL_WEBSITE: { level: 3, label: 'Official Website' },

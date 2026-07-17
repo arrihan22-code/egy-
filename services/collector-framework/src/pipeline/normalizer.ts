@@ -1,7 +1,7 @@
 import { NormalizedRecord } from '@egypt/shared-types';
 import { createHash } from 'crypto';
 
-export interface NormalizationRule {
+export interface NormalizationRuleConfig {
   field: string;
   type: 'string' | 'number' | 'boolean' | 'date' | 'phone' | 'coordinate';
   transform?: (value: unknown) => unknown;
@@ -9,36 +9,35 @@ export interface NormalizationRule {
 }
 
 export class Normalizer {
-  private rules: Map<string, NormalizationRule[]> = new Map();
+  private rules: Map<string, NormalizationRuleConfig[]> = new Map();
 
-  registerRules(domain: string, rules: NormalizationRule[]): void {
+  registerRules(domain: string, rules: NormalizationRuleConfig[]): void {
     this.rules.set(domain, rules);
   }
 
-  normalize<T>(
+  normalize<T extends Record<string, unknown>>(
     record: T,
     sourceUrl: string,
     sourceName: string,
     sourcePriority: number
   ): NormalizedRecord<T> {
-    const data = record as Record<string, unknown>;
-    const normalized = { ...data };
+    const data = { ...record };
 
     const domain = (record as any).__domain || 'default';
     const rules = this.rules.get(domain) || [];
 
     for (const rule of rules) {
-      if (rule.field in normalized) {
-        normalized[rule.field] = this.applyRule(normalized[rule.field], rule);
+      if (rule.field in data) {
+        data[rule.field as keyof typeof data] = this.applyRule(data[rule.field as keyof typeof data], rule) as any;
       } else if (rule.defaultValue !== undefined) {
-        normalized[rule.field] = rule.defaultValue;
+        (data as any)[rule.field] = rule.defaultValue;
       }
     }
 
-    const hash = this.computeHash(normalized);
+    const hash = this.computeHash(data as unknown as Record<string, unknown>);
 
     return {
-      data: normalized,
+      data: data as unknown as T,
       sourceUrl,
       sourceName,
       sourcePriority,
@@ -47,7 +46,7 @@ export class Normalizer {
     };
   }
 
-  private applyRule(value: unknown, rule: NormalizationRule): unknown {
+  private applyRule(value: unknown, rule: NormalizationRuleConfig): unknown {
     if (value === null || value === undefined) {
       return rule.defaultValue;
     }
@@ -62,20 +61,4 @@ export class Normalizer {
     hash.update(JSON.stringify(data, Object.keys(data).sort()));
     return hash.digest('hex');
   }
-}
-
-interface NormalizationRule {
-  field: string;
-  type: 'string' | 'number' | 'boolean' | 'date' | 'phone' | 'coordinate';
-  transform?: (value: unknown) => unknown;
-  defaultValue?: unknown;
-}
-
-interface NormalizedRecord<T> {
-  data: T;
-  sourceUrl: string;
-  sourceName: string;
-  sourcePriority: number;
-  fetchedAt: Date;
-  hash: string;
 }

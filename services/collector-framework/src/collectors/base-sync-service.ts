@@ -74,7 +74,7 @@ export abstract class BaseSyncService<T extends Record<string, unknown>> {
       try {
         source = await this.sourceResolver.resolveBestSource(domain);
       } catch {
-        return await this.completeImportLog(importLogId, domain, importLog, {
+        return await this.completeImportLog(importLogId, domain, {
           status: 'failed', errorMessage: 'No available sources', durationMs: Date.now() - startTime,
         }, 0, 0, 0, 0, startTime);
       }

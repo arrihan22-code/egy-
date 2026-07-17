@@ -1,7 +1,37 @@
 import { DataSource } from '@egypt/shared-types';
 
+function makeSource(partial: {
+  domain: string;
+  sourceName: string;
+  sourceUrl: string;
+  healthEndpoint?: string;
+  type: 'api' | 'website' | 'open_data' | 'structured_file' | 'trusted_public';
+  priority: 1 | 2 | 3 | 4 | 5 | 6;
+  updateFrequency?: string;
+  headers?: Record<string, string>;
+  rateLimit?: { requestsPerSecond: number; maxConcurrency: number };
+}): DataSource {
+  return {
+    id: `${partial.domain}-${partial.sourceName.replace(/\s+/g, '-').toLowerCase()}`,
+    isAvailable: true,
+    lastChecked: null,
+    authType: 'none' as const,
+    rateLimit: partial.rateLimit ? { requests: partial.rateLimit.requestsPerSecond, perMs: 1000 } : { requests: 1, perMs: 1000 },
+    url: partial.sourceUrl,
+    name: partial.sourceName,
+    sourceUrl: partial.sourceUrl,
+    sourceName: partial.sourceName,
+    domain: partial.domain,
+    type: partial.type,
+    priority: partial.priority,
+    updateFrequency: partial.updateFrequency,
+    healthEndpoint: partial.healthEndpoint,
+    headers: partial.headers,
+  };
+}
+
 export const OFFICIAL_SOURCES: DataSource[] = [
-  {
+  makeSource({
     domain: 'banks',
     sourceName: 'Central Bank of Egypt',
     sourceUrl: 'https://www.cbe.org.eg',
@@ -11,8 +41,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'weekly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'banks',
     sourceName: 'Egyptian Banking Institute',
     sourceUrl: 'https://www.ebi.gov.eg',
@@ -22,8 +52,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'weekly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 2, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'pharmacies',
     sourceName: 'Egyptian Ministry of Health',
     sourceUrl: 'https://www.mohp.gov.eg',
@@ -33,8 +63,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 2, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'pharmacies',
     sourceName: 'Egyptian Drug Authority',
     sourceUrl: 'https://www.eda.mohp.gov.eg',
@@ -44,8 +74,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 2, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'pharmacies',
     sourceName: 'Egyptian Pharmacists Syndicate',
     sourceUrl: 'https://www.eps.com.eg',
@@ -55,8 +85,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'hospitals',
     sourceName: 'Egyptian Ministry of Health - Hospitals',
     sourceUrl: 'https://www.mohp.gov.eg/hospitals',
@@ -66,8 +96,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 2, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'hospitals',
     sourceName: 'General Authority for Healthcare Accreditation',
     sourceUrl: 'https://www.gahealthcare.eg',
@@ -77,8 +107,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'government',
     sourceName: 'Egyptian Government Services Portal',
     sourceUrl: 'https://www.gov.eg',
@@ -88,8 +118,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'weekly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 2, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'government',
     sourceName: 'Egyptian Cabinet Information Center',
     sourceUrl: 'https://www.idsc.gov.eg',
@@ -99,8 +129,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'transport',
     sourceName: 'Ministry of Transport',
     sourceUrl: 'https://www.mot.gov.eg',
@@ -110,8 +140,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 2, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'transport',
     sourceName: 'Cairo Metro - National Authority for Tunnels',
     sourceUrl: 'https://www.nat.gov.eg',
@@ -121,8 +151,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'transport',
     sourceName: 'Egyptian National Railways',
     sourceUrl: 'https://enr.gov.eg',
@@ -132,8 +162,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'emergency',
     sourceName: 'Ministry of Interior',
     sourceUrl: 'https://www.moiegypt.gov.eg',
@@ -143,8 +173,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'emergency',
     sourceName: 'Egyptian Ambulance Authority',
     sourceUrl: 'https://www.ambulance.eg',
@@ -154,8 +184,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'emergency',
     sourceName: 'Egyptian Red Crescent',
     sourceUrl: 'https://www.egyptianrc.org',
@@ -165,9 +195,174 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
+    domain: 'banks',
+    sourceName: 'National Bank of Egypt',
+    sourceUrl: 'https://www.nbe.com.eg',
+    healthEndpoint: 'https://www.nbe.com.eg',
+    type: 'website',
+    priority: 3,
+    updateFrequency: 'weekly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'banks',
+    sourceName: 'Banque Misr',
+    sourceUrl: 'https://www.banquemisr.com',
+    healthEndpoint: 'https://www.banquemisr.com',
+    type: 'website',
+    priority: 3,
+    updateFrequency: 'weekly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'banks',
+    sourceName: 'Commercial International Bank',
+    sourceUrl: 'https://www.cibeg.com',
+    healthEndpoint: 'https://www.cibeg.com',
+    type: 'website',
+    priority: 3,
+    updateFrequency: 'weekly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
     domain: 'telecom',
+    sourceName: 'Orange Egypt',
+    sourceUrl: 'https://www.orange.eg',
+    healthEndpoint: 'https://www.orange.eg',
+    type: 'website',
+    priority: 2,
+    updateFrequency: 'monthly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'telecom',
+    sourceName: 'Vodafone Egypt',
+    sourceUrl: 'https://www.vodafone.com.eg',
+    healthEndpoint: 'https://www.vodafone.com.eg',
+    type: 'website',
+    priority: 2,
+    updateFrequency: 'monthly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'telecom',
+    sourceName: 'Etisalat Egypt',
+    sourceUrl: 'https://www.etisalat.eg',
+    healthEndpoint: 'https://www.etisalat.eg',
+    type: 'website',
+    priority: 2,
+    updateFrequency: 'monthly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'telecom',
+    sourceName: 'Telecom Egypt (WE)',
+    sourceUrl: 'https://www.we.eg',
+    healthEndpoint: 'https://www.we.eg',
+    type: 'website',
+    priority: 2,
+    updateFrequency: 'monthly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'supermarkets',
+    sourceName: 'Carrefour Egypt',
+    sourceUrl: 'https://www.carrefouregypt.com',
+    healthEndpoint: 'https://www.carrefouregypt.com',
+    type: 'website',
+    priority: 2,
+    updateFrequency: 'monthly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'supermarkets',
+    sourceName: 'Metro Market Egypt',
+    sourceUrl: 'https://www.metro-market.eg',
+    healthEndpoint: 'https://www.metro-market.eg',
+    type: 'website',
+    priority: 2,
+    updateFrequency: 'monthly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'supermarkets',
+    sourceName: 'Hyper One',
+    sourceUrl: 'https://www.hyperone.com.eg',
+    healthEndpoint: 'https://www.hyperone.com.eg',
+    type: 'website',
+    priority: 3,
+    updateFrequency: 'monthly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'supermarkets',
+    sourceName: 'Seoudi Market',
+    sourceUrl: 'https://www.seoudi.com.eg',
+    healthEndpoint: 'https://www.seoudi.com.eg',
+    type: 'website',
+    priority: 3,
+    updateFrequency: 'monthly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'hospitals',
+    sourceName: 'Dar El Fouad Hospital',
+    sourceUrl: 'https://www.darelfouad.com',
+    healthEndpoint: 'https://www.darelfouad.com',
+    type: 'website',
+    priority: 3,
+    updateFrequency: 'monthly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'hospitals',
+    sourceName: 'Cleopatra Hospital',
+    sourceUrl: 'https://www.cleopatra-hospital.com',
+    healthEndpoint: 'https://www.cleopatra-hospital.com',
+    type: 'website',
+    priority: 3,
+    updateFrequency: 'monthly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'pharmacies',
+    sourceName: '19011 (El Ezaby)',
+    sourceUrl: 'https://www.19011.com',
+    healthEndpoint: 'https://www.19011.com',
+    type: 'website',
+    priority: 2,
+    updateFrequency: 'weekly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'pharmacies',
+    sourceName: 'Seif Pharmacy',
+    sourceUrl: 'https://www.seifpharmacy.com',
+    healthEndpoint: 'https://www.seifpharmacy.com',
+    type: 'website',
+    priority: 3,
+    updateFrequency: 'weekly',
+    headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
+    rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
+  }),
+  makeSource({
+    domain: 'pharmacies',
     sourceName: 'Ministry of Communications and IT',
     sourceUrl: 'https://www.mcit.gov.eg',
     healthEndpoint: 'https://www.mcit.gov.eg',
@@ -176,8 +371,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 2, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'telecom',
     sourceName: 'National Telecom Regulatory Authority',
     sourceUrl: 'https://www.tra.gov.eg',
@@ -187,8 +382,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 2, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'supermarkets',
     sourceName: 'Ministry of Supply and Internal Trade',
     sourceUrl: 'https://www.msit.gov.eg',
@@ -198,8 +393,8 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
-  },
-  {
+  }),
+  makeSource({
     domain: 'supermarkets',
     sourceName: 'Consumer Protection Agency',
     sourceUrl: 'https://www.cpa.gov.eg',
@@ -209,7 +404,7 @@ export const OFFICIAL_SOURCES: DataSource[] = [
     updateFrequency: 'monthly',
     headers: { 'User-Agent': 'EgyptServicesPlatform/1.0', 'Accept-Language': 'ar-EG' },
     rateLimit: { requestsPerSecond: 1, maxConcurrency: 1 },
-  },
+  }),
 ];
 
 export const SOURCE_CONFIGS_BY_DOMAIN: Record<string, DataSource[]> = {};

@@ -198,6 +198,7 @@ model Bank {
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   branches BankBranch[]
+  atms     AtmLocation[]
 
   @@map("banks")
 }
@@ -565,6 +566,130 @@ model Review {
   @@index([userId])
   @@index([entityType, entityId, rating])
   @@map("reviews")
+}
+
+model TelecomCompany {
+  id              String   @id @default(uuid()) @db.Uuid
+  nameAr          String   @map("name_ar")
+  nameEn          String?  @map("name_en")
+  brandName       String?  @map("brand_name")
+  type            String   @default("mobile")
+  website         String?
+  phone           String?
+  customerService String?  @map("customer_service")
+  isActive        Boolean  @default(true) @map("is_active")
+
+  sourceName        String    @default("") @map("source_name")
+  sourceUrl         String    @default("") @map("source_url")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  lastVerifiedAt    DateTime? @map("last_verified_at")
+  dataVersion       Int       @default(1) @map("data_version")
+  validationStatus  String    @default("pending") @map("validation_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  branches TelecomBranch[]
+
+  @@map("telecom_companies")
+}
+
+model TelecomBranch {
+  id            String   @id @default(uuid()) @db.Uuid
+  companyId     String   @map("company_id") @db.Uuid
+  nameAr        String   @map("name_ar")
+  nameEn        String?  @map("name_en")
+  branchType    String   @default("store") @map("branch_type")
+  governorateId String   @map("governorate_id") @db.Uuid
+  cityId        String   @map("city_id") @db.Uuid
+  areaId        String?  @map("area_id") @db.Uuid
+  street        String?
+  latitude      Decimal  @db.Decimal(10, 7)
+  longitude     Decimal  @db.Decimal(10, 7)
+  phone         String?
+  workingHours  String?  @map("working_hours")
+  isActive      Boolean  @default(true) @map("is_active")
+
+  sourceName        String    @default("") @map("source_name")
+  sourceUrl         String    @default("") @map("source_url")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  lastVerifiedAt    DateTime? @map("last_verified_at")
+  dataVersion       Int       @default(1) @map("data_version")
+  validationStatus  String    @default("pending") @map("validation_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company TelecomCompany @relation(fields: [companyId], references: [id])
+
+  @@index([latitude, longitude])
+  @@map("telecom_branches")
+}
+
+model Supermarket {
+  id                String   @id @default(uuid()) @db.Uuid
+  nameAr            String   @map("name_ar")
+  nameEn            String?  @map("name_en")
+  brandName         String?  @map("brand_name")
+  type              String   @default("supermarket")
+  governorateId     String   @map("governorate_id") @db.Uuid
+  cityId            String   @map("city_id") @db.Uuid
+  areaId            String?  @map("area_id") @db.Uuid
+  street            String?
+  latitude          Decimal  @db.Decimal(10, 7)
+  longitude         Decimal  @db.Decimal(10, 7)
+  phone             String?
+  website           String?
+  hasDelivery       Boolean  @default(false) @map("has_delivery")
+  hasOnlineOrdering Boolean  @default(false) @map("has_online_ordering")
+  workingHours      String?  @map("working_hours")
+  isActive          Boolean  @default(true) @map("is_active")
+
+  sourceName        String    @default("") @map("source_name")
+  sourceUrl         String    @default("") @map("source_url")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  lastVerifiedAt    DateTime? @map("last_verified_at")
+  dataVersion       Int       @default(1) @map("data_version")
+  validationStatus  String    @default("pending") @map("validation_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([latitude, longitude])
+  @@map("supermarkets")
+}
+
+model AtmLocation {
+  id            String   @id @default(uuid()) @db.Uuid
+  bankId        String   @map("bank_id") @db.Uuid
+  nameAr        String   @map("name_ar")
+  nameEn        String?  @map("name_en")
+  type          String   @default("atm")
+  governorateId String   @map("governorate_id") @db.Uuid
+  cityId        String   @map("city_id") @db.Uuid
+  areaId        String?  @map("area_id") @db.Uuid
+  street        String?
+  latitude      Decimal  @db.Decimal(10, 7)
+  longitude     Decimal  @db.Decimal(10, 7)
+  is24h         Boolean  @default(false) @map("is_24h")
+  hasDeposit    Boolean  @default(false) @map("has_deposit")
+  isActive      Boolean  @default(true) @map("is_active")
+
+  sourceName        String    @default("") @map("source_name")
+  sourceUrl         String    @default("") @map("source_url")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  lastVerifiedAt    DateTime? @map("last_verified_at")
+  dataVersion       Int       @default(1) @map("data_version")
+  validationStatus  String    @default("pending") @map("validation_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  bank Bank @relation(fields: [bankId], references: [id])
+
+  @@index([latitude, longitude])
+  @@index([bankId])
+  @@map("atm_locations")
 }
 
 model ReviewPhoto {
