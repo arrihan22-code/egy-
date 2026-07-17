@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 const NOTIF_API = process.env.NEXT_PUBLIC_NOTIFICATIONS_API || 'http://localhost:3090/api/v1/notifications';
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 interface Notification {
   id: string;
@@ -15,19 +15,22 @@ interface Notification {
 }
 
 export default function NotificationBell() {
+  const { user } = useAuth();
+  const userId = user?.id;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch(`${NOTIF_API}/${DEMO_USER_ID}?unreadOnly=true&limit=5`)
+    if (!userId) return;
+    fetch(`${NOTIF_API}/${userId}?unreadOnly=true&limit=5`)
       .then(r => r.json())
       .then(d => { setNotifications(d.data || []); setUnread(d.meta?.unread || 0); })
       .catch(() => {});
 
     const interval = setInterval(() => {
-      fetch(`${NOTIF_API}/${DEMO_USER_ID}?unreadOnly=true&limit=5`)
+      fetch(`${NOTIF_API}/${userId}?unreadOnly=true&limit=5`)
         .then(r => r.json())
         .then(d => { setNotifications(d.data || []); setUnread(d.meta?.unread || 0); })
         .catch(() => {});
@@ -40,20 +43,20 @@ export default function NotificationBell() {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => { clearInterval(interval); document.removeEventListener('mousedown', handleClickOutside); };
-  }, []);
+  }, [userId]);
 
   const handleMarkRead = async (id: string) => {
     await fetch(`${NOTIF_API}/${id}/read`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: DEMO_USER_ID }),
+      body: JSON.stringify({ userId: userId }),
     });
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
     setUnread(prev => Math.max(0, prev - 1));
   };
 
   const handleMarkAllRead = async () => {
-    await fetch(`${NOTIF_API}/${DEMO_USER_ID}/read-all`, { method: 'PUT' });
+    await fetch(`${NOTIF_API}/${userId}/read-all`, { method: 'PUT' });
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     setUnread(0);
   };

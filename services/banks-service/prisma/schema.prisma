@@ -55,6 +55,21 @@ model Profile {
   user User @relation(fields: [userId], references: [id])
 }
 
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
 model Governorate {
   id       String @id @default(uuid()) @db.Uuid
   nameAr   String @map("name_ar")
