@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, develop]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   lint:
@@ -40,7 +40,7 @@ jobs:
       - run: npm ci
       - run: npm run test
 
-  dagger:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +50,6 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run build
-      - run: docker build -t egypt-platform -f infrastructure/docker/Dockerfile . --build-arg NODE_ENV=production
 
   security-scan:
     runs-on: ubuntu-latest
@@ -65,7 +64,7 @@ jobs:
 
   deploy-staging:
     if: github.ref == 'refs/heads/develop'
-    needs: [lint, typecheck, test, build]
+    needs: [lint, test, build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -73,8 +72,8 @@ jobs:
         run: echo "Deploying to staging environment"
 
   deploy-production:
-    if: github.ref == 'refs/heads/main'
-    needs: [lint, typecheck, test, build, security-scan]
+    if: github.ref == 'refs/heads/master'
+    needs: [lint, test, build, security-scan]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

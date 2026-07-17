@@ -13,6 +13,11 @@
     "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
     "seed": "npx ts-node scripts/seed.ts"
   },
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
   "devDependencies": {
     "@nx/js": "^20.0.0",
     "nx": "^20.0.0",

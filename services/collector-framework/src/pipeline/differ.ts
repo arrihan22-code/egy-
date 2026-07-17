@@ -64,11 +64,3 @@ export class Differ {
     return a === b;
   }
 }
-
-interface DiffResult {
-  hasChanges: boolean;
-  added: string[];
-  removed: string[];
-  modified: Array<{ field: string; oldValue: unknown; newValue: unknown }>;
-  unchanged: string[];
-}

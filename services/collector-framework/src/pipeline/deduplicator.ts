@@ -46,17 +46,16 @@ export class Deduplicator {
 
   private findMatch(
     record: NormalizedRecord<unknown>,
-    existing: NormalizedRecord<unknown>[],
+    existingRecords: NormalizedRecord<unknown>[],
     config: DedupConfig
   ): { existingId: string; confidence: number } | null {
     const data = record.data as Record<string, unknown>;
 
-    for (const existing of existing) {
+    for (const existing of existingRecords) {
       const existingData = existing.data as Record<string, unknown>;
-
       if (config.externalIdField && data[config.externalIdField] && existingData[config.externalIdField]) {
         if (data[config.externalIdField] === existingData[config.externalIdField]) {
-          return { existingId: existing.data.id as string, confidence: 1 };
+          return { existingId: existingData.id as string, confidence: 1 };
         }
       }
 
@@ -70,7 +69,7 @@ export class Deduplicator {
 
       if (matchFields.length > 0 && matches >= Math.ceil(matchFields.length / 2)) {
         return {
-          existingId: existing.data.id as string,
+          existingId: existingData.id as string,
           confidence: matches / matchFields.length,
         };
       }
@@ -78,11 +77,4 @@ export class Deduplicator {
 
     return null;
   }
-}
-
-interface DedupConfig {
-  matchFields: string[];
-  fuzzyFields?: string[];
-  fuzzyThreshold?: number;
-  externalIdField?: string;
 }

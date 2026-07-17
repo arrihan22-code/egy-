@@ -33,16 +33,3 @@ export class Validator {
     return { valid, errors, total: records.length, validCount: valid.length };
   }
 }
-
-interface ValidationError {
-  index: number;
-  issues: unknown[];
-  raw: unknown;
-}
-
-interface ValidationResult<T> {
-  valid: T[];
-  errors: ValidationError[];
-  total: number;
-  validCount: number;
-}

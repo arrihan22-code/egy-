@@ -18,6 +18,7 @@ model User {
 
   roles    UserRole[]
   profiles Profile[]
+  refreshTokens RefreshToken[]
 }
 
 model Role {
@@ -253,6 +254,7 @@ model HospitalDepartment {
   phone      String?
 
   hospital Hospital @relation(fields: [hospitalId], references: [id])
+  doctors  Doctor[] @relation("doctorDepartment")
 
   @@map("hospital_departments")
 }
@@ -272,7 +274,7 @@ model Doctor {
   isActive        Boolean  @default(true) @map("is_active")
 
   hospital   Hospital            @relation(fields: [hospitalId], references: [id])
-  department HospitalDepartment? @relation(fields: [departmentId], references: [id])
+  department HospitalDepartment? @relation(fields: [departmentId], references: [id], name: "doctorDepartment")
 
   @@map("doctors")
 }
