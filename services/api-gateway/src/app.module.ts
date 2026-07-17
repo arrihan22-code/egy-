@@ -14,6 +14,7 @@ const SERVICES: Record<string, string> = {
   '/api/v1/notifications': process.env.NOTIFICATIONS_SERVICE_URL || 'http://localhost:3090',
   '/api/v1/analytics': process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3100',
   '/api/v1/auth': process.env.AUTH_SERVICE_URL || 'http://localhost:3110',
+  '/api/v1/sync': process.env.SYNC_SERVICE_URL || 'http://localhost:3120',
 };
 
 @Module({})

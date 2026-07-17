@@ -16,9 +16,9 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  roles    UserRole[]
-  profiles Profile[]
-  refreshTokens RefreshToken[]
+  roles          UserRole[]
+  profiles       Profile[]
+  refreshTokens  RefreshToken[]
 }
 
 model Role {
@@ -72,11 +72,11 @@ model RefreshToken {
 }
 
 model Governorate {
-  id       String @id @default(uuid()) @db.Uuid
-  nameAr   String @map("name_ar")
-  nameEn   String @map("name_en")
-  code     String? @unique
-  latitude  Decimal? @db.Decimal(10, 7)
+  id        String  @id @default(uuid()) @db.Uuid
+  nameAr    String  @map("name_ar")
+  nameEn    String  @map("name_en")
+  code      String? @unique
+  latitude   Decimal? @db.Decimal(10, 7)
   longitude Decimal? @db.Decimal(10, 7)
   isActive  Boolean @default(true) @map("is_active")
 
@@ -96,15 +96,84 @@ model City {
 }
 
 model Area {
-  id        String  @id @default(uuid()) @db.Uuid
-  cityId    String  @map("city_id") @db.Uuid
-  nameAr    String  @map("name_ar")
-  nameEn    String? @map("name_en")
+  id         String  @id @default(uuid()) @db.Uuid
+  cityId     String  @map("city_id") @db.Uuid
+  nameAr     String  @map("name_ar")
+  nameEn     String? @map("name_en")
   postalCode String? @map("postal_code")
   latitude   Decimal? @db.Decimal(10, 7)
   longitude  Decimal? @db.Decimal(10, 7)
 
   city City @relation(fields: [cityId], references: [id])
+}
+
+model SourceConfig {
+  id              String   @id @default(uuid()) @db.Uuid
+  domain          String
+  sourceName      String   @map("source_name")
+  sourceUrl       String   @map("source_url")
+  sourceType      String   @default("api") @map("source_type")
+  priority        Int      @default(5)
+  updateFrequency String   @default("daily") @map("update_frequency")
+  apiKey          String?  @map("api_key")
+  headers         Json?    @default("{}")
+  healthEndpoint  String?  @map("health_endpoint")
+  paginationType  String?  @map("pagination_type")
+  isActive        Boolean  @default(true) @map("is_active")
+  lastSyncAt      DateTime? @map("last_sync_at")
+  lastSyncStatus  String?  @default("never") @map("last_sync_status")
+  consecutiveFailures Int  @default(0) @map("consecutive_failures")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  syncLogs ImportLog[]
+
+  @@unique([domain, sourceName])
+  @@index([domain])
+  @@map("source_configs")
+}
+
+model ImportLog {
+  id              String   @id @default(uuid()) @db.Uuid
+  sourceConfigId  String   @map("source_config_id") @db.Uuid
+  domain          String
+  triggeredBy     String   @default("scheduled") @map("triggered_by")
+  status          String   @default("running")
+  recordsFetched  Int      @default(0) @map("records_fetched")
+  recordsInserted Int      @default(0) @map("records_inserted")
+  recordsUpdated  Int      @default(0) @map("records_updated")
+  recordsFailed   Int      @default(0) @map("records_failed")
+  recordsUnchanged Int     @default(0) @map("records_unchanged")
+  errorMessage    String?  @map("error_message")
+  durationMs      Int      @default(0) @map("duration_ms")
+  startedAt       DateTime @default(now()) @map("started_at")
+  completedAt     DateTime? @map("completed_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  sourceConfig SourceConfig @relation(fields: [sourceConfigId], references: [id])
+
+  @@index([domain, createdAt(sort: Desc)])
+  @@index([sourceConfigId, createdAt(sort: Desc)])
+  @@index([status])
+  @@map("import_logs")
+}
+
+model SyncRecord {
+  id          String   @id @default(uuid()) @db.Uuid
+  domain      String
+  entityId    String   @map("entity_id") @db.Uuid
+  entityType  String   @map("entity_type")
+  importLogId String?  @map("import_log_id") @db.Uuid
+  action      String   @default("insert")
+  changedFields Json?  @map("changed_fields")
+  sourceUrl   String?  @map("source_url")
+  dataVersion Int      @default(1) @map("data_version")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([domain, entityId])
+  @@index([importLogId])
+  @@index([createdAt(sort: Desc)])
+  @@map("sync_records")
 }
 
 model Bank {
@@ -117,6 +186,14 @@ model Bank {
   phone      String?
   email      String?
   isActive   Boolean  @default(true) @map("is_active")
+
+  sourceName        String    @default("") @map("source_name")
+  sourceUrl         String    @default("") @map("source_url")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  lastVerifiedAt    DateTime? @map("last_verified_at")
+  dataVersion       Int       @default(1) @map("data_version")
+  validationStatus  String    @default("pending") @map("validation_status")
+
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
@@ -140,6 +217,14 @@ model BankBranch {
   phone         String?
   hasAtm        Boolean  @default(false) @map("has_atm")
   isActive      Boolean  @default(true) @map("is_active")
+
+  sourceName        String    @default("") @map("source_name")
+  sourceUrl         String    @default("") @map("source_url")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  lastVerifiedAt    DateTime? @map("last_verified_at")
+  dataVersion       Int       @default(1) @map("data_version")
+  validationStatus  String    @default("pending") @map("validation_status")
+
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
@@ -193,6 +278,14 @@ model Pharmacy {
   is24h          Boolean  @default(false) @map("is_24h")
   hasDelivery    Boolean  @default(false) @map("has_delivery")
   isActive       Boolean  @default(true) @map("is_active")
+
+  sourceName        String    @default("") @map("source_name")
+  sourceUrl         String    @default("") @map("source_url")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  lastVerifiedAt    DateTime? @map("last_verified_at")
+  dataVersion       Int       @default(1) @map("data_version")
+  validationStatus  String    @default("pending") @map("validation_status")
+
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -234,6 +327,14 @@ model Hospital {
   hasEmergency   Boolean  @default(false) @map("has_emergency")
   bedCount       Int?     @map("bed_count")
   isActive       Boolean  @default(true) @map("is_active")
+
+  sourceName        String    @default("") @map("source_name")
+  sourceUrl         String    @default("") @map("source_url")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  lastVerifiedAt    DateTime? @map("last_verified_at")
+  dataVersion       Int       @default(1) @map("data_version")
+  validationStatus  String    @default("pending") @map("validation_status")
+
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -294,8 +395,16 @@ model GovernmentOffice {
   phone         String?
   email         String?
   isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  sourceName        String    @default("") @map("source_name")
+  sourceUrl         String    @default("") @map("source_url")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  lastVerifiedAt    DateTime? @map("last_verified_at")
+  dataVersion       Int       @default(1) @map("data_version")
+  validationStatus  String    @default("pending") @map("validation_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   services GovernmentService[]
 
@@ -334,8 +443,16 @@ model TransportStation {
   hasParking       Boolean  @default(false) @map("has_parking")
   hasAccessibility Boolean  @default(false) @map("has_accessibility")
   isActive         Boolean  @default(true) @map("is_active")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  sourceName        String    @default("") @map("source_name")
+  sourceUrl         String    @default("") @map("source_url")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  lastVerifiedAt    DateTime? @map("last_verified_at")
+  dataVersion       Int       @default(1) @map("data_version")
+  validationStatus  String    @default("pending") @map("validation_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   routesFrom TransportRoute[] @relation("fromStation")
   routesTo   TransportRoute[] @relation("toStation")
@@ -375,23 +492,39 @@ model EmergencyContact {
   longitude      Decimal? @db.Decimal(10, 7)
   isNational     Boolean  @default(false) @map("is_national")
   isActive       Boolean  @default(true) @map("is_active")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  sourceName        String    @default("") @map("source_name")
+  sourceUrl         String    @default("") @map("source_url")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  lastVerifiedAt    DateTime? @map("last_verified_at")
+  dataVersion       Int       @default(1) @map("data_version")
+  validationStatus  String    @default("pending") @map("validation_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([latitude, longitude])
   @@map("emergency_contacts")
 }
 
 model EmergencyAlert {
-  id           String   @id @default(uuid()) @db.Uuid
-  titleAr      String   @map("title_ar")
-  titleEn      String?  @map("title_en")
-  description  String
-  severity     String   @default("info")
-  affectedAreas Json    @map("affected_areas")
-  isActive     Boolean  @default(true) @map("is_active")
-  expiresAt    DateTime? @map("expires_at")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id            String   @id @default(uuid()) @db.Uuid
+  titleAr       String   @map("title_ar")
+  titleEn       String?  @map("title_en")
+  description   String
+  severity      String   @default("info")
+  affectedAreas Json     @map("affected_areas")
+  isActive      Boolean  @default(true) @map("is_active")
+  expiresAt     DateTime? @map("expires_at")
+
+  sourceName        String    @default("") @map("source_name")
+  sourceUrl         String    @default("") @map("source_url")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  lastVerifiedAt    DateTime? @map("last_verified_at")
+  dataVersion       Int       @default(1) @map("data_version")
+  validationStatus  String    @default("pending") @map("validation_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@map("emergency_alerts")
 }
