@@ -1,4 +1,9 @@
+'use client';
+
+import { useDirection } from '../../contexts/DirectionContext';
+
 export default function TransportPage() {
+  const { t, direction } = useDirection();
   const items = [
     { id: '1', nameAr: 'محطة مترو السادات', nameEn: 'Sadat Metro Station', type: 'metro', line: 'Line 1 & 2' },
     { id: '2', nameAr: 'محطة مترو العتبة', nameEn: 'Ataba Metro Station', type: 'metro', line: 'Line 1 & 2' },
@@ -6,25 +11,45 @@ export default function TransportPage() {
     { id: '4', nameAr: 'محطة سكة حديد مصر', nameEn: 'Ramses Railway Station', type: 'train', line: 'Main Lines' },
     { id: '5', nameAr: 'محطة مترو شبرا الخيمة', nameEn: 'Shobra El Kheima Station', type: 'metro', line: 'Line 2' },
   ];
+
   return (
-    <div>
-      <h1 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>Transport</h1>
-      <p style={{ color: '#6b7280', marginBottom: '2rem' }}>Find metro, train, and bus stations with routes and schedules</p>
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
-        <input placeholder="Search stations..." style={{ flex: 1 }} />
-        <select><option>All Types</option><option>Metro</option><option>Train</option><option>Bus</option></select>
-        <button>Search</button>
-      </div>
-      <div className="grid">
-        {items.map(s => (
-          <a key={s.id} href={`/transport/${s.id}`} className="card" style={{ display: 'block' }}>
-            <h3>{s.nameAr}</h3>
-            {s.nameEn && <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>{s.nameEn}</p>}
-            <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.25rem' }}>
-              <span style={{ background: '#e0e7ff', padding: '0.125rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem' }}>{s.line}</span>
-            </div>
-          </a>
-        ))}
+    <div className="page-section">
+      <div className="container">
+        <div className="slide-up" style={{ marginBottom: 'var(--space-6)' }}>
+          <h1 style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, marginBottom: 'var(--space-2)' }}>
+            {t('Transport', 'المواصلات')}
+          </h1>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            {t('Find metro, train, and bus stations with routes and schedules', 'اعثر على محطات المترو والقطارات والحافلات مع المسارات والجداول')}
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-6)', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input type="text" className="input" placeholder={t('Search stations...', 'ابحث عن المحطات...')} style={{ maxWidth: 320 }} dir={direction} />
+          <select className="input" style={{ maxWidth: 160 }}>
+            <option>{t('All Types', 'جميع الأنواع')}</option>
+            <option>{t('Metro', 'مترو')}</option>
+            <option>{t('Train', 'قطار')}</option>
+            <option>{t('Bus', 'حافلة')}</option>
+          </select>
+        </div>
+
+        <div className="grid grid-auto stagger">
+          {items.map(s => (
+            <a key={s.id} href={`/transport/${s.id}`} className="card card-hover" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-3)' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-lg)', background: 'var(--warning-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', flexShrink: 0 }}>
+                  {'\u{1F687}'}
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 600 }}>{s.nameAr}</h3>
+                  {s.nameEn && <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>{s.nameEn}</p>}
+                </div>
+              </div>
+              <span className="badge badge-warning">{s.line}</span>
+            </a>
+          ))}
+        </div>
       </div>
     </div>
   );

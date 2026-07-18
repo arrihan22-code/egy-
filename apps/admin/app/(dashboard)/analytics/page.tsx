@@ -4,9 +4,6 @@ import { useState, useEffect } from 'react';
 
 const API = process.env.NEXT_PUBLIC_ANALYTICS_API || 'http://localhost:3100/api/v1/analytics';
 
-const thStyle: React.CSSProperties = { padding: '0.5rem 0.75rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb', fontSize: '0.8rem', textTransform: 'uppercase', color: '#6b7280' };
-const tdStyle: React.CSSProperties = { padding: '0.5rem 0.75rem', fontSize: '0.875rem' };
-
 export default function AnalyticsAdminPage() {
   const [overview, setOverview] = useState<any>(null);
   const [governorates, setGovernorates] = useState<any[]>([]);
@@ -27,119 +24,120 @@ export default function AnalyticsAdminPage() {
     }).catch(() => {});
   }, []);
 
+  const entityTypes = [
+    { key: 'banks', label: 'Banks', color: '#0A66C2', value: overview?.entities?.banks },
+    { key: 'pharmacies', label: 'Pharmacies', color: '#10B981', value: overview?.entities?.pharmacies },
+    { key: 'hospitals', label: 'Hospitals', color: '#EF4444', value: overview?.entities?.hospitals },
+    { key: 'government', label: 'Government', color: '#8B5CF6', value: overview?.entities?.governmentOffices },
+    { key: 'transport', label: 'Transport', color: '#F59E0B', value: overview?.entities?.transportStations },
+    { key: 'emergency', label: 'Emergency', color: '#DC2626', value: overview?.entities?.emergencyContacts },
+    { key: 'reviews', label: 'Reviews', color: '#0891B2', value: overview?.reviews?.approved },
+    { key: 'users', label: 'Users', color: '#6B7280', value: overview?.users?.verified },
+  ];
+
   return (
-    <div>
-      <h1>Analytics Dashboard</h1>
+    <div className="fade-in">
+      <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, marginBottom: 'var(--space-6)' }}>Analytics Dashboard</h1>
 
-      <h2>Entity Overview</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem', marginBottom: '2rem' }}>
-        <StatCard label="Banks" value={overview?.entities?.banks} color="#2563eb" />
-        <StatCard label="Pharmacies" value={overview?.entities?.pharmacies} color="#16a34a" />
-        <StatCard label="Hospitals" value={overview?.entities?.hospitals} color="#dc2626" />
-        <StatCard label="Government" value={overview?.entities?.governmentOffices} color="#9333ea" />
-        <StatCard label="Transport" value={overview?.entities?.transportStations} color="#ca8a04" />
-        <StatCard label="Emergency" value={overview?.entities?.emergencyContacts} color="#dc2626" />
-        <StatCard label="Reviews" value={overview?.reviews?.approved} color="#0891b2" />
-        <StatCard label="Users" value={overview?.users?.verified} color="#6b7280" />
-      </div>
-
-      <h2>System Health</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        <div className="card" style={{ padding: '1rem' }}>
-          <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Data Sources</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 600 }}>{health?.dataSources?.active}/{health?.dataSources?.total}</div>
-          <div style={{ fontSize: '0.8rem', color: health?.status === 'healthy' ? '#16a34a' : '#dc2626' }}>
-            {health?.status === 'healthy' ? 'Healthy' : 'Warning'}
-          </div>
-        </div>
-        <div className="card" style={{ padding: '1rem' }}>
-          <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Pending Imports</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 600 }}>{health?.imports?.pending}</div>
-        </div>
-        <div className="card" style={{ padding: '1rem' }}>
-          <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Failed Imports</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 600, color: (health?.imports?.failed || 0) > 0 ? '#dc2626' : 'inherit' }}>{health?.imports?.failed}</div>
-        </div>
-        <div className="card" style={{ padding: '1rem' }}>
-          <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Dead Letters</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 600, color: (health?.deadLetters || 0) > 0 ? '#dc2626' : 'inherit' }}>{health?.deadLetters}</div>
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)' }}>Entity Overview</h2>
+        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))' }}>
+          {entityTypes.map(e => (
+            <div key={e.key} className="stat-card slide-up">
+              <div className="stat-value" style={{ color: e.color }}>{e.value ?? '-'}</div>
+              <div className="stat-label">{e.label}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <h2>Governorate Distribution</h2>
-      <div style={{ overflowX: 'auto', marginBottom: '2rem' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-          <thead>
-            <tr style={{ background: '#f9fafb' }}>
-              <th style={thStyle}>Governorate</th>
-              <th style={thStyle}>Banks</th>
-              <th style={thStyle}>Pharmacies</th>
-              <th style={thStyle}>Hospitals</th>
-              <th style={thStyle}>Government</th>
-              <th style={thStyle}>Transport</th>
-              <th style={thStyle}>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {governorates.map((g: any, i: number) => (
-              <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                <td style={tdStyle}><strong>{g.nameAr}</strong></td>
-                <td style={tdStyle}>{g.bankCount}</td>
-                <td style={tdStyle}>{g.pharmacyCount}</td>
-                <td style={tdStyle}>{g.hospitalCount}</td>
-                <td style={tdStyle}>{g.governmentCount}</td>
-                <td style={tdStyle}>{g.transportCount}</td>
-                <td style={{ ...tdStyle, fontWeight: 600 }}>
-                  {Number(g.bankCount) + Number(g.pharmacyCount) + Number(g.hospitalCount) + Number(g.governmentCount) + Number(g.transportCount)}
-                </td>
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)' }}>System Health</h2>
+        <div className="grid grid-4" style={{ gap: 'var(--space-4)' }}>
+          {[
+            { label: 'Data Sources', value: health ? `${health?.dataSources?.active}/${health?.dataSources?.total}` : '-', sub: health?.status === 'healthy' ? 'Healthy' : 'Warning', subColor: health?.status === 'healthy' ? 'var(--accent-dark)' : 'var(--error)' },
+            { label: 'Pending Imports', value: health?.imports?.pending ?? '-', sub: '' },
+            { label: 'Failed Imports', value: health?.imports?.failed ?? '-', sub: '', accent: (health?.imports?.failed || 0) > 0 },
+            { label: 'Dead Letters', value: health?.deadLetters ?? '-', sub: '', accent: (health?.deadLetters || 0) > 0 },
+          ].map(s => (
+            <div key={s.label} className="card" style={{ padding: 'var(--space-4)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', marginBottom: 'var(--space-1)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</div>
+              <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: s.accent ? 'var(--error)' : 'var(--text-primary)' }}>{s.value}</div>
+              {s.sub && <div style={{ fontSize: 'var(--text-xs)', color: s.subColor, marginTop: 'var(--space-1)' }}>{s.sub}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)' }}>Governorate Distribution</h2>
+        <div className="card" style={{ padding: 0, overflow: 'auto' }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Governorate</th>
+                <th>Banks</th>
+                <th>Pharmacies</th>
+                <th>Hospitals</th>
+                <th>Government</th>
+                <th>Transport</th>
+                <th>Total</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {governorates.map((g: any, i: number) => (
+                <tr key={i}>
+                  <td style={{ fontWeight: 600 }}>{g.nameAr}</td>
+                  <td>{g.bankCount ?? 0}</td>
+                  <td>{g.pharmacyCount ?? 0}</td>
+                  <td>{g.hospitalCount ?? 0}</td>
+                  <td>{g.governmentCount ?? 0}</td>
+                  <td>{g.transportCount ?? 0}</td>
+                  <td style={{ fontWeight: 600 }}>
+                    {[g.bankCount, g.pharmacyCount, g.hospitalCount, g.governmentCount, g.transportCount].reduce((a: number, b: string) => a + (Number(b) || 0), 0)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <h2>Collector Performance (7 days)</h2>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-          <thead>
-            <tr style={{ background: '#f9fafb' }}>
-              <th style={thStyle}>Source</th>
-              <th style={thStyle}>Priority</th>
-              <th style={thStyle}>Runs</th>
-              <th style={thStyle}>Fetched</th>
-              <th style={thStyle}>Inserted</th>
-              <th style={thStyle}>Updated</th>
-              <th style={thStyle}>Failed</th>
-              <th style={thStyle}>Avg Duration</th>
-              <th style={thStyle}>Last Run</th>
-            </tr>
-          </thead>
-          <tbody>
-            {collectors.map((c: any, i: number) => (
-              <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                <td style={tdStyle}>{c.sourceName || c.collectorId}</td>
-                <td style={tdStyle}>{c.sourcePriority}</td>
-                <td style={tdStyle}>{c.totalRuns}</td>
-                <td style={tdStyle}>{c.totalFetched}</td>
-                <td style={tdStyle}>{c.totalInserted}</td>
-                <td style={tdStyle}>{c.totalUpdated}</td>
-                <td style={{ ...tdStyle, color: c.totalFailed > 0 ? '#dc2626' : 'inherit' }}>{c.totalFailed}</td>
-                <td style={tdStyle}>{c.avgDurationSec}s</td>
-                <td style={tdStyle}>{c.lastRun ? new Date(c.lastRun).toLocaleDateString() : '-'}</td>
+      <div>
+        <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)' }}>Collector Performance (7 days)</h2>
+        <div className="card" style={{ padding: 0, overflow: 'auto' }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Priority</th>
+                <th>Runs</th>
+                <th>Fetched</th>
+                <th>Inserted</th>
+                <th>Updated</th>
+                <th>Failed</th>
+                <th>Avg Duration</th>
+                <th>Last Run</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {collectors.map((c: any, i: number) => (
+                <tr key={i}>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>{c.sourceName || c.collectorId}</td>
+                  <td>{c.sourcePriority}</td>
+                  <td>{c.totalRuns}</td>
+                  <td>{c.totalFetched}</td>
+                  <td>{c.totalInserted}</td>
+                  <td>{c.totalUpdated}</td>
+                  <td style={{ color: (c.totalFailed || 0) > 0 ? 'var(--error)' : 'inherit', fontWeight: (c.totalFailed || 0) > 0 ? 600 : 400 }}>{c.totalFailed ?? 0}</td>
+                  <td>{c.avgDurationSec || '-'}s</td>
+                  <td style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>{c.lastRun ? new Date(c.lastRun).toLocaleDateString() : '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, color }: { label: string; value?: number; color: string }) {
-  return (
-    <div className="card" style={{ padding: '1rem', textAlign: 'center' }}>
-      <div style={{ fontSize: '1.75rem', fontWeight: 700, color }}>{value ?? '-'}</div>
-      <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.25rem' }}>{label}</div>
     </div>
   );
 }

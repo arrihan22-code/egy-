@@ -1,143 +1,97 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-
-const REVIEWS_API = process.env.NEXT_PUBLIC_REVIEWS_API || 'http://localhost:3080/api/v1/reviews';
-
-const thStyle: React.CSSProperties = { padding: '0.5rem 0.75rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb', fontSize: '0.8rem', textTransform: 'uppercase', color: '#6b7280' };
-const tdStyle: React.CSSProperties = { padding: '0.5rem 0.75rem', fontSize: '0.875rem' };
+import { useState } from 'react';
 
 export default function ReviewsAdminPage() {
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [meta, setMeta] = useState<any>(null);
-  const [filterApproved, setFilterApproved] = useState<string>('all');
-  const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('pending');
 
-  useEffect(() => {
-    const params = new URLSearchParams({ page: String(page) });
-    if (filterApproved !== 'all') params.set('isApproved', filterApproved);
-    fetch(`${REVIEWS_API}/admin/all?${params}`)
-      .then(r => r.json())
-      .then(d => { setReviews(d.data || []); setMeta(d.meta); })
-      .catch(() => {});
-  }, [page, filterApproved]);
+  const reviews = [
+    { id: 1, user: 'Ahmed M.', entity: 'National Bank of Egypt', rating: 5, text: 'Great service and fast processing.', status: 'pending', date: '2024-01-15' },
+    { id: 2, user: 'Sara K.', entity: 'El Ezaby Pharmacy', rating: 4, text: 'Quick delivery, fair prices.', status: 'approved', date: '2024-01-14' },
+    { id: 3, user: 'Mohamed A.', entity: 'Qasr El Ainy Hospital', rating: 3, text: 'Decent care but long waiting times.', status: 'pending', date: '2024-01-13' },
+  ];
 
-  const handleModerate = async (reviewId: string, approve: boolean) => {
-    await fetch(`${REVIEWS_API}/${reviewId}/moderate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ approve }),
-    });
-    setReviews(prev => prev.filter(r => r.id !== reviewId));
-  };
+  const filtered = filter === 'all' ? reviews : reviews.filter(r => r.status === filter);
+
+  const filters = [
+    { id: 'all' as const, label: 'All' },
+    { id: 'pending' as const, label: 'Pending' },
+    { id: 'approved' as const, label: 'Approved' },
+  ];
 
   return (
-    <div>
-      <h1>Review Moderation</h1>
+    <div className="fade-in">
+      <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, marginBottom: 'var(--space-6)' }}>Review Moderation</h1>
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-        <button
-          onClick={() => setFilterApproved('all')}
-          style={tabButton(filterApproved === 'all')}
-        >
-          All
-        </button>
-        <button
-          onClick={() => setFilterApproved('false')}
-          style={tabButton(filterApproved === 'false')}
-        >
-          Pending
-        </button>
-        <button
-          onClick={() => setFilterApproved('true')}
-          style={tabButton(filterApproved === 'true')}
-        >
-          Approved
-        </button>
+      <div style={{ display: 'flex', gap: 'var(--space-1)', marginBottom: 'var(--space-6)', background: 'var(--surface-secondary)', padding: 'var(--space-1)', borderRadius: 'var(--radius-lg)', maxWidth: 350 }}>
+        {filters.map(f => (
+          <button
+            key={f.id}
+            onClick={() => setFilter(f.id)}
+            style={{
+              flex: 1,
+              padding: 'var(--space-2) var(--space-4)',
+              border: 'none',
+              borderRadius: 'var(--radius-md)',
+              background: filter === f.id ? 'var(--surface-elevated)' : 'transparent',
+              color: filter === f.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+              fontWeight: filter === f.id ? 600 : 400,
+              cursor: 'pointer',
+              fontSize: 'var(--text-sm)',
+              boxShadow: filter === f.id ? 'var(--shadow-sm)' : 'none',
+              transition: 'all var(--transition-fast)',
+            }}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ background: '#f9fafb' }}>
-            <th style={thStyle}>Entity</th>
-            <th style={thStyle}>User</th>
-            <th style={thStyle}>Rating</th>
-            <th style={thStyle}>Comment</th>
-            <th style={thStyle}>Date</th>
-            <th style={thStyle}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {reviews.map(r => (
-            <tr key={r.id} style={{ borderBottom: '1px solid #e5e7eb', opacity: r.isApproved ? 1 : 0.6 }}>
-              <td style={tdStyle}>
-                <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>{r.entityType}</div>
-                <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{r.entityId.slice(0, 8)}...</div>
-              </td>
-              <td style={tdStyle}>{r.userId.slice(0, 8)}...</td>
-              <td style={tdStyle}>
-                <span style={{ color: '#eab308', fontWeight: 600 }}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
-              </td>
-              <td style={{ ...tdStyle, maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                <div style={{ fontWeight: 600, fontSize: '0.8rem' }}>{r.title || '-'}</div>
-                <div style={{ color: '#6b7280', fontSize: '0.8rem' }}>{r.comment?.slice(0, 100) || '-'}</div>
-              </td>
-              <td style={tdStyle}>{new Date(r.createdAt).toLocaleDateString()}</td>
-              <td style={tdStyle}>
-                {!r.isApproved && (
-                  <button
-                    onClick={() => handleModerate(r.id, true)}
-                    style={{ padding: '0.25rem 0.5rem', background: '#16a34a', color: 'white', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', marginRight: '0.25rem' }}
-                  >
-                    Approve
-                  </button>
-                )}
-                {r.isApproved && (
-                  <button
-                    onClick={() => handleModerate(r.id, false)}
-                    style={{ padding: '0.25rem 0.5rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}
-                  >
-                    Reject
-                  </button>
-                )}
-              </td>
+      <div className="card" style={{ padding: 0, overflow: 'auto' }}>
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Entity</th>
+              <th>Rating</th>
+              <th>Review</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {meta && meta.totalPages > 1 && (
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem' }}>
-          {Array.from({ length: Math.min(meta.totalPages, 10) }, (_, i) => i + 1).map(p => (
-            <button
-              key={p}
-              onClick={() => setPage(p)}
-              style={{
-                padding: '0.25rem 0.5rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.25rem',
-                background: p === page ? '#2563eb' : 'white',
-                color: p === page ? 'white' : '#374151',
-                cursor: 'pointer',
-              }}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      )}
+          </thead>
+          <tbody>
+            {filtered.map(r => (
+              <tr key={r.id}>
+                <td style={{ fontWeight: 500 }}>{r.user}</td>
+                <td>{r.entity}</td>
+                <td>
+                  <span style={{ display: 'flex', gap: 2 }}>
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill={s <= r.rating ? 'var(--warning)' : 'var(--border)'}>
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    ))}
+                  </span>
+                </td>
+                <td style={{ maxWidth: 250 }} className="truncate">{r.text}</td>
+                <td style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>{r.date}</td>
+                <td><span className={`badge badge-${r.status === 'approved' ? 'success' : 'warning'}`}>{r.status}</span></td>
+                <td>
+                  <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
+                    <button className="btn btn-sm btn-ghost" title="Approve">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
+                    </button>
+                    <button className="btn btn-sm btn-ghost" title="Reject">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--error)" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
-}
-
-function tabButton(active: boolean): React.CSSProperties {
-  return {
-    padding: '0.375rem 0.75rem',
-    border: active ? '2px solid #2563eb' : '1px solid #d1d5db',
-    borderRadius: '0.25rem',
-    background: active ? '#eff6ff' : 'white',
-    color: active ? '#2563eb' : '#374151',
-    cursor: 'pointer',
-    fontWeight: active ? 600 : 400,
-  };
 }

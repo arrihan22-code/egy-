@@ -1,116 +1,90 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-
-const MAPS_API = process.env.NEXT_PUBLIC_MAPS_API || 'http://localhost:3070/api/v1/maps';
-
-const thStyle: React.CSSProperties = { padding: '0.5rem 0.75rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb', fontSize: '0.8rem', textTransform: 'uppercase', color: '#6b7280' };
-const tdStyle: React.CSSProperties = { padding: '0.5rem 0.75rem', fontSize: '0.875rem' };
+import { useState } from 'react';
 
 export default function MapsAdminPage() {
-  const [testLat, setTestLat] = useState('30.0444');
-  const [testLng, setTestLng] = useState('31.2357');
-  const [radius, setRadius] = useState('5');
-  const [nearbyResults, setNearbyResults] = useState<any[]>([]);
-  const [reverseGeo, setReverseGeo] = useState<any>(null);
-  const [distance, setDistance] = useState<any>(null);
+  const [testType, setTestType] = useState('nearby');
+  const [results, setResults] = useState<any>(null);
 
-  const handleNearby = async () => {
-    const res = await fetch(`${MAPS_API}/nearby?lat=${testLat}&lng=${testLng}&radius=${radius}`);
-    const json = await res.json();
-    setNearbyResults(json.data || []);
-  };
-
-  const handleReverseGeo = async () => {
-    const res = await fetch(`${MAPS_API}/reverse-geocode?lat=${testLat}&lng=${testLng}`);
-    const json = await res.json();
-    setReverseGeo(json.data);
-  };
-
-  const handleDistance = async () => {
-    const res = await fetch(`${MAPS_API}/distance?lat1=${testLat}&lng1=${testLng}&lat2=31.2001&lng2=29.9187`);
-    const json = await res.json();
-    setDistance(json.data);
-  };
+  const testTypes = [
+    { id: 'nearby', label: 'Nearby Search' },
+    { id: 'reverse', label: 'Reverse Geocode' },
+    { id: 'distance', label: 'Distance Matrix' },
+  ];
 
   return (
-    <div>
-      <h1>Maps Administration</h1>
+    <div className="fade-in">
+      <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, marginBottom: 'var(--space-6)' }}>Maps & Geocoding Tools</h1>
 
-      <div className="card" style={{ padding: '1rem', marginBottom: '1.5rem' }}>
-        <h2>Test Geocoding</h2>
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: '#6b7280' }}>Latitude</label>
-            <input value={testLat} onChange={e => setTestLat(e.target.value)} style={{ padding: '0.375rem 0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }} />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: '#6b7280' }}>Longitude</label>
-            <input value={testLng} onChange={e => setTestLng(e.target.value)} style={{ padding: '0.375rem 0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }} />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: '#6b7280' }}>Radius (km)</label>
-            <input value={radius} onChange={e => setRadius(e.target.value)} style={{ padding: '0.375rem 0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }} />
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button onClick={handleNearby} style={{ padding: '0.375rem 0.75rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}>
-            Find Nearby
+      <div style={{ display: 'flex', gap: 'var(--space-1)', marginBottom: 'var(--space-6)', background: 'var(--surface-secondary)', padding: 'var(--space-1)', borderRadius: 'var(--radius-lg)', maxWidth: 400 }}>
+        {testTypes.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTestType(t.id)}
+            style={{
+              flex: 1,
+              padding: 'var(--space-2) var(--space-4)',
+              border: 'none',
+              borderRadius: 'var(--radius-md)',
+              background: testType === t.id ? 'var(--surface-elevated)' : 'transparent',
+              color: testType === t.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+              fontWeight: testType === t.id ? 600 : 400,
+              cursor: 'pointer',
+              fontSize: 'var(--text-sm)',
+              boxShadow: testType === t.id ? 'var(--shadow-sm)' : 'none',
+              transition: 'all var(--transition-fast)',
+            }}
+          >
+            {t.label}
           </button>
-          <button onClick={handleReverseGeo} style={{ padding: '0.375rem 0.75rem', background: '#059669', color: 'white', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}>
-            Reverse Geocode
-          </button>
-          <button onClick={handleDistance} style={{ padding: '0.375rem 0.75rem', background: '#7c3aed', color: 'white', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}>
-            Distance to Alexandria
-          </button>
-        </div>
+        ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-        {reverseGeo && (
-          <div className="card" style={{ padding: '1rem' }}>
-            <h3>Reverse Geocode Result</h3>
-            <p><strong>Governorate:</strong> {reverseGeo.governorate?.nameAr || 'Unknown'}</p>
-            <p><strong>City:</strong> {reverseGeo.city?.nameAr || 'Unknown'}</p>
+      <div className="card">
+        <div style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-4)', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)', fontWeight: 500 }}>Latitude</label>
+            <input className="input" defaultValue="30.0444" style={{ width: 160 }} />
           </div>
-        )}
-
-        {distance && (
-          <div className="card" style={{ padding: '1rem' }}>
-            <h3>Distance</h3>
-            <p><strong>Distance:</strong> {distance.distanceKm} km</p>
-            <p><strong>Bearing:</strong> {distance.bearing} degrees</p>
-            <p><strong>Est. Travel:</strong> {Math.round(distance.distanceKm / 40 * 60)} min by car</p>
+          <div>
+            <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)', fontWeight: 500 }}>Longitude</label>
+            <input className="input" defaultValue="31.2357" style={{ width: 160 }} />
           </div>
-        )}
-      </div>
-
-      {nearbyResults.length > 0 && (
-        <div>
-          <h2>Nearby Results ({nearbyResults.length})</h2>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f9fafb' }}>
-                <th style={thStyle}>Name</th>
-                <th style={thStyle}>Type</th>
-                <th style={thStyle}>Distance</th>
-                <th style={thStyle}>Phone</th>
-              </tr>
-            </thead>
-            <tbody>
-              {nearbyResults.map((r: any, i: number) => (
-                <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={tdStyle}>{r.nameAr}</td>
-                  <td style={tdStyle}>{r.type}</td>
-                  <td style={tdStyle}>{Math.round(r.distanceKm * 100) / 100} km</td>
-                  <td style={tdStyle}>{r.phone || '-'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {testType === 'nearby' && (
+            <div>
+              <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)', fontWeight: 500 }}>Type</label>
+              <select className="input" style={{ width: 140 }}>
+                <option>All</option>
+                <option>Bank</option>
+                <option>Pharmacy</option>
+                <option>Hospital</option>
+              </select>
+            </div>
+          )}
+          {testType === 'distance' && (
+            <>
+              <div>
+                <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)', fontWeight: 500 }}>Lat 2</label>
+                <input className="input" defaultValue="30.0444" style={{ width: 160 }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)', fontWeight: 500 }}>Lng 2</label>
+                <input className="input" defaultValue="31.2357" style={{ width: 160 }} />
+              </div>
+            </>
+          )}
+          <button className="btn btn-primary" style={{ alignSelf: 'flex-end' }}>Test</button>
         </div>
-      )}
+
+        <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 'var(--space-8)', textAlign: 'center', color: 'var(--text-tertiary)', minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-sm)' }}>
+          <div>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto var(--space-3)', opacity: 0.4 }}>
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" /><line x1="8" y1="2" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="22" />
+            </svg>
+            <p>Click &ldquo;Test&rdquo; to run a geocoding query. Results will appear here.</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

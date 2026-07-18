@@ -1,118 +1,79 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-const API = process.env.NEXT_PUBLIC_AUTH_API || 'http://localhost:3110/api/v1/auth';
+export default function UsersAdminPage() {
+  const [search, setSearch] = useState('');
 
-const thStyle: React.CSSProperties = { padding: '0.5rem 0.75rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb', fontSize: '0.8rem', textTransform: 'uppercase', color: '#6b7280' };
-const tdStyle: React.CSSProperties = { padding: '0.5rem 0.75rem', fontSize: '0.875rem' };
-
-interface User {
-  id: string;
-  phone: string;
-  email?: string;
-  fullName?: string;
-  isVerified: boolean;
-  roles: string[];
-  createdAt: string;
-}
-
-export default function AdminUsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  const fetchUsers = async (p: number) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/admin/users?page=${p}&limit=50`);
-      const d = await res.json();
-      setUsers(d.data || []);
-      setTotal(d.meta?.total || 0);
-    } catch { setUsers([]); }
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchUsers(page); }, [page]);
-
-  const toggleVerify = async (id: string, current: boolean) => {
-    await fetch(`${API}/admin/users/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isVerified: !current }),
-    });
-    fetchUsers(page);
-  };
-
-  const updateRoles = async (id: string, roles: string[]) => {
-    await fetch(`${API}/admin/users/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ roles }),
-    });
-    fetchUsers(page);
-  };
-
-  const totalPages = Math.ceil(total / 50);
+  const users = [
+    { id: '1', name: 'Ahmed Mohamed', phone: '+20 100 123 4567', email: 'ahmed@example.com', role: 'User', verified: true, joined: '2024-01-10' },
+    { id: '2', name: 'Sara Ali', phone: '+20 100 234 5678', email: 'sara@example.com', role: 'Admin', verified: true, joined: '2024-01-05' },
+    { id: '3', name: 'Mohamed Hassan', phone: '+20 100 345 6789', email: 'mohamed@example.com', role: 'User', verified: false, joined: '2024-01-01' },
+    { id: '4', name: 'Nour Ibrahim', phone: '+20 100 456 7890', email: 'nour@example.com', role: 'Moderator', verified: true, joined: '2023-12-20' },
+  ];
 
   return (
-    <div>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem' }}>User Management</h1>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Phone</th>
-                <th style={thStyle}>Email</th>
-                <th style={thStyle}>Name</th>
-                <th style={thStyle}>Verified</th>
-                <th style={thStyle}>Roles</th>
-                <th style={thStyle}>Created</th>
-                <th style={thStyle}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(u => (
-                <tr key={u.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={tdStyle}>{u.phone}</td>
-                  <td style={tdStyle}>{u.email || '-'}</td>
-                  <td style={tdStyle}>{u.fullName || '-'}</td>
-                  <td style={tdStyle}>
-                    <span style={{ color: u.isVerified ? '#16a34a' : '#dc2626', fontWeight: 600 }}>
-                      {u.isVerified ? 'Yes' : 'No'}
-                    </span>
-                  </td>
-                  <td style={tdStyle}>{(u.roles || []).join(', ')}</td>
-                  <td style={tdStyle}>{new Date(u.createdAt).toLocaleDateString()}</td>
-                  <td style={tdStyle}>
-                    <button onClick={() => toggleVerify(u.id, u.isVerified)} style={{ marginRight: '0.5rem', padding: '0.25rem 0.5rem', fontSize: '0.75rem', cursor: 'pointer' }}>
-                      {u.isVerified ? 'Unverify' : 'Verify'}
+    <div className="fade-in">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-6)', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+        <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, margin: 0 }}>User Management</h1>
+        <button className="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+          Add User
+        </button>
+      </div>
+
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <input
+          className="input"
+          style={{ maxWidth: 320 }}
+          placeholder="Search users by name, phone, or email..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="card" style={{ padding: 0, overflow: 'auto' }}>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Verified</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.filter(u => !search || u.name.includes(search) || u.phone.includes(search) || u.email.includes(search)).map(u => (
+              <tr key={u.id}>
+                <td style={{ fontWeight: 500 }}>{u.name}</td>
+                <td dir="ltr">{u.phone}</td>
+                <td style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>{u.email}</td>
+                <td><span className={`badge ${u.role === 'Admin' ? 'badge-info' : u.role === 'Moderator' ? 'badge-warning' : 'badge-neutral'}`}>{u.role}</span></td>
+                <td>
+                  {u.verified
+                    ? <span className="badge badge-success">Verified</span>
+                    : <span className="badge badge-failed">Unverified</span>
+                  }
+                </td>
+                <td style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>{u.joined}</td>
+                <td>
+                  <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
+                    <button className="btn btn-sm btn-ghost" title="Edit">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                     </button>
-                    <select
-                      value={(u.roles || [])[0] || 'user'}
-                      onChange={e => updateRoles(u.id, [e.target.value])}
-                      style={{ padding: '0.25rem', fontSize: '0.75rem' }}
-                    >
-                      <option value="user">User</option>
-                      <option value="moderator">Moderator</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={{ padding: '0.25rem 0.75rem', cursor: page <= 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
-            <span style={{ fontSize: '0.875rem' }}>Page {page} of {totalPages}</span>
-            <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={{ padding: '0.25rem 0.75rem', cursor: page >= totalPages ? 'not-allowed' : 'pointer' }}>Next</button>
-          </div>
-        </>
-      )}
+                    <button className="btn btn-sm btn-ghost" title="Delete" style={{ color: 'var(--error)' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -21,22 +21,13 @@ interface MapViewProps {
   className?: string;
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  bank: '\u{1F3E6}',
-  pharmacy: '\u{1F48A}',
-  hospital: '\u{1F3E5}',
-  government: '\u{1F3DB}',
-  transport: '\u{1F687}',
-  emergency: '\u{1F6A8}',
-};
-
 const TYPE_COLORS: Record<string, string> = {
-  bank: '#2563eb',
-  pharmacy: '#16a34a',
-  hospital: '#dc2626',
-  government: '#9333ea',
-  transport: '#ca8a04',
-  emergency: '#dc2626',
+  bank: '#0A66C2',
+  pharmacy: '#10B981',
+  hospital: '#EF4444',
+  government: '#8B5CF6',
+  transport: '#F59E0B',
+  emergency: '#DC2626',
 };
 
 export default function MapView({ markers, center, zoom, height, onMarkerClick }: MapViewProps) {
@@ -77,27 +68,31 @@ export default function MapView({ markers, center, zoom, height, onMarkerClick }
     });
 
     for (const marker of markers) {
-      const color = TYPE_COLORS[marker.type] || '#6b7280';
+      const color = TYPE_COLORS[marker.type] || '#6B7280';
       const icon = L.divIcon({
         className: 'custom-div-icon',
         html: `<div style="
           background: ${color};
           color: white;
-          width: 32px;
-          height: 32px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 16px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        ">${TYPE_ICONS[marker.type] || '?'}</div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
+          box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+          border: 2px solid white;
+          transition: transform 0.15s;
+        ">${'\u{1F3E6}'}</div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
       });
 
       const m = L.marker([marker.latitude, marker.longitude], { icon }).addTo(map);
-      m.bindTooltip(marker.name, { direction: 'top' });
+
+      const tooltipContent = `<div style="font-weight:600;font-size:13px;padding:2px 0">${marker.name}</div>`;
+      m.bindTooltip(tooltipContent, { direction: 'top', offset: L.point(0, -8) });
 
       if (onMarkerClick) {
         m.on('click', () => onMarkerClick(marker.id, marker.type));
@@ -105,10 +100,17 @@ export default function MapView({ markers, center, zoom, height, onMarkerClick }
     }
 
     if (markers.length > 0 && !center) {
-      const group = L.featureGroup(markers.map(m => L.marker([m.latitude, m.longitude])));
-      map.fitBounds(group.getBounds().pad(0.1));
+      try {
+        const group = L.featureGroup(markers.map(m => L.marker([m.latitude, m.longitude])));
+        map.fitBounds(group.getBounds().pad(0.1));
+      } catch {}
     }
   }, [markers, center]);
 
-  return <div ref={mapRef} style={{ width: '100%', height: height || '400px' }} />;
+  return (
+    <div
+      ref={mapRef}
+      style={{ width: '100%', height: height || '400px', borderRadius: 'inherit' }}
+    />
+  );
 }
