@@ -18,9 +18,6 @@
     "services/*",
     "apps/*"
   ],
-  "pnpm": {
-    "onlyBuiltDependencies": ["@nestjs/core", "@prisma/client", "@prisma/engines", "nx", "prisma", "sharp"]
-  },
   "devDependencies": {
     "@nx/js": "^20.0.0",
     "nx": "^20.0.0",
