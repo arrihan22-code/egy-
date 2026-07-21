@@ -167,7 +167,7 @@ export class AuthService {
 
     return {
       success: true,
-      data: records.map(u => this.sanitizeUser(u)),
+      data: records.map((u: { id: string }) => this.sanitizeUser(u)),
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
