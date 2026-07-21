@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
     },
-    sitemap: 'https://egypt-services-web.vercel.app/sitemap.xml',
+    sitemap: 'https://eg-ahmed-mokhtar-s-projects.vercel.app/sitemap.xml',
   };
 }

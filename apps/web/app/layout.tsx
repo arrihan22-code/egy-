@@ -17,11 +17,11 @@ export const metadata: Metadata = {
     template: '%s | Egypt Services Platform',
   },
   description: 'Find banks, pharmacies, hospitals, government offices, transport, emergency contacts, and more across Egypt',
-  metadataBase: new URL('https://egypt-services-web.vercel.app'),
+  metadataBase: new URL('https://eg-ahmed-mokhtar-s-projects.vercel.app'),
   openGraph: {
     title: 'Egypt Services Platform',
     description: 'Find banks, pharmacies, hospitals, government offices, transport, emergency contacts, and more across Egypt',
-    url: 'https://egypt-services-web.vercel.app',
+    url: 'https://eg-ahmed-mokhtar-s-projects.vercel.app',
     siteName: 'Egypt Services Platform',
     locale: 'en_US',
     alternateLocale: 'ar_EG',

@@ -36,7 +36,7 @@ export default function RootLayoutClient({ children }: { children: ReactNode }) 
             '@context': 'https://schema.org',
             '@type': 'WebSite',
             name: 'Egypt Services Platform',
-            url: 'https://egypt-services-web.vercel.app',
+            url: 'https://eg-ahmed-mokhtar-s-projects.vercel.app',
             description: 'Find banks, pharmacies, hospitals, government offices, transport, and emergency contacts across Egypt',
             inLanguage: ['en', 'ar'],
           }} />
