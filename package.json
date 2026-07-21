@@ -2,6 +2,7 @@
   "name": "egypt-services-platform",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@11.9.0",
   "description": "Egypt Services Platform - Automated Data Aggregation System",
   "scripts": {
     "build": "nx run-many --target=build --all",
@@ -18,6 +19,9 @@
     "services/*",
     "apps/*"
   ],
+  "pnpm": {
+    "onlyBuiltDependencies": ["sharp", "@prisma/client", "@prisma/engines", "prisma", "@nestjs/core"]
+  },
   "devDependencies": {
     "@nx/js": "^20.0.0",
     "nx": "^20.0.0",
