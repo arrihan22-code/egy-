@@ -1,5 +1,5 @@
 {
-  "exclude": ["collectors/*/src", "node_modules"],
+  "exclude": ["collectors/*/src", "node_modules", "scripts", "jest.config.ts", "dist"],
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
@@ -7,7 +7,6 @@
     "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,

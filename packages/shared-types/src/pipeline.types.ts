@@ -9,10 +9,12 @@ export interface PipelineConfig {
 
 export interface NormalizedRecord<T = Record<string, unknown>> {
   data: T;
+  source: string;
   sourceUrl: string;
   sourceName: string;
   sourcePriority: number;
   fetchedAt: Date;
+  collectedAt: Date;
   hash: string;
 }
 

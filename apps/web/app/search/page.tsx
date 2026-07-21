@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useDirection } from '../contexts/DirectionContext';
+import { Badge } from '../components/Badge';
 
 interface SearchResult {
   id: string;
@@ -234,7 +235,7 @@ function SearchResults() {
                     {r.nameEn && <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-1)' }}>{r.nameEn}</div>}
                     {r.description && <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--space-2)' }} className="line-clamp-2">{r.description}</div>}
                     <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
-                      <span className="badge badge-neutral">{TYPE_LABELS[r.type]?.[language === 'ar' ? 'ar' : 'en'] || r.type}</span>
+                      <Badge variant="neutral">{TYPE_LABELS[r.type]?.[language === 'ar' ? 'ar' : 'en'] || r.type}</Badge>
                       {r.governorateNameAr && (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>

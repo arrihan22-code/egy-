@@ -1,7 +1,14 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  images: { unoptimized: true },
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.vercel.app' },
+      { protocol: 'https', hostname: 'via.placeholder.com' },
+      { protocol: 'https', hostname: 'i.imgur.com' },
+      { protocol: 'https', hostname: '**.gravatar.com' },
+    ],
+  },
   async rewrites() {
     return [
       {

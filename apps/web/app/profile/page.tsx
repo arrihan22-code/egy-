@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useAuth } from '../contexts/AuthContext';
 import { useDirection } from '../contexts/DirectionContext';
 
@@ -61,7 +62,7 @@ export default function ProfilePage() {
                 boxShadow: 'var(--shadow-md)',
               }}>
                 {user.profile?.avatarUrl ? (
-                  <img src={user.profile.avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: 'var(--radius-xl)', objectFit: 'cover' }} />
+                  <Image src={user.profile.avatarUrl} alt="" width={80} height={80} style={{ borderRadius: 'var(--radius-xl)', objectFit: 'cover' }} />
                 ) : (
                   <span style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--primary)' }}>{initial}</span>
                 )}

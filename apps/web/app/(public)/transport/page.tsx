@@ -1,6 +1,11 @@
 'use client';
 
 import { useDirection } from '../../contexts/DirectionContext';
+import { PageSection } from '../../components/PageSection';
+import { ListingHeader } from '../../components/ListingHeader';
+import { CardGrid } from '../../components/CardGrid';
+import { ListingCard } from '../../components/ListingCard';
+import { Badge } from '../../components/Badge';
 
 export default function TransportPage() {
   const { t, direction } = useDirection();
@@ -13,44 +18,38 @@ export default function TransportPage() {
   ];
 
   return (
-    <div className="page-section">
-      <div className="container">
-        <div className="slide-up" style={{ marginBottom: 'var(--space-6)' }}>
-          <h1 style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, marginBottom: 'var(--space-2)' }}>
-            {t('Transport', 'المواصلات')}
-          </h1>
-          <p style={{ color: 'var(--text-secondary)' }}>
-            {t('Find metro, train, and bus stations with routes and schedules', 'اعثر على محطات المترو والقطارات والحافلات مع المسارات والجداول')}
-          </p>
-        </div>
+    <PageSection>
+      <ListingHeader
+        titleKey="Transport"
+        titleAr="المواصلات"
+        subtitleKey="Find metro, train, and bus stations with routes and schedules"
+        subtitleAr="اعثر على محطات المترو والقطارات والحافلات مع المسارات والجداول"
+      />
 
-        <div style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-6)', flexWrap: 'wrap', alignItems: 'center' }}>
-          <input type="text" className="input" placeholder={t('Search stations...', 'ابحث عن المحطات...')} style={{ maxWidth: 320 }} dir={direction} />
-          <select className="input" style={{ maxWidth: 160 }}>
-            <option>{t('All Types', 'جميع الأنواع')}</option>
-            <option>{t('Metro', 'مترو')}</option>
-            <option>{t('Train', 'قطار')}</option>
-            <option>{t('Bus', 'حافلة')}</option>
-          </select>
-        </div>
-
-        <div className="grid grid-auto stagger">
-          {items.map(s => (
-            <a key={s.id} href={`/transport/${s.id}`} className="card card-hover" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-3)' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-lg)', background: 'var(--warning-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', flexShrink: 0 }}>
-                  {'\u{1F687}'}
-                </div>
-                <div>
-                  <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 600 }}>{s.nameAr}</h3>
-                  {s.nameEn && <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>{s.nameEn}</p>}
-                </div>
-              </div>
-              <span className="badge badge-warning">{s.line}</span>
-            </a>
-          ))}
-        </div>
+      <div style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-6)', flexWrap: 'wrap', alignItems: 'center' }}>
+        <input type="text" className="input" placeholder={t('Search stations...', 'ابحث عن المحطات...')} style={{ maxWidth: 320 }} dir={direction} />
+        <select className="input" style={{ maxWidth: 160 }}>
+          <option>{t('All Types', 'جميع الأنواع')}</option>
+          <option>{t('Metro', 'مترو')}</option>
+          <option>{t('Train', 'قطار')}</option>
+          <option>{t('Bus', 'حافلة')}</option>
+        </select>
       </div>
-    </div>
+
+      <CardGrid>
+        {items.map(s => (
+          <ListingCard
+            key={s.id}
+            href={`/transport/${s.id}`}
+            icon={'\u{1F687}'}
+            iconBg="var(--warning-light)"
+            nameAr={s.nameAr}
+            nameEn={s.nameEn}
+          >
+            <Badge variant="warning" style={{ marginTop: 'var(--space-2)' }}>{s.line}</Badge>
+          </ListingCard>
+        ))}
+      </CardGrid>
+    </PageSection>
   );
 }

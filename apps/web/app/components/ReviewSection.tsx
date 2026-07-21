@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useDirection } from '../contexts/DirectionContext';
 
 interface Review {
@@ -159,7 +160,7 @@ export default function ReviewSection({ entityType, entityId }: ReviewSectionPro
               {review.photos && review.photos.length > 0 && (
                 <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>
                   {review.photos.map(p => (
-                    <img key={p.url} src={p.url} alt={p.caption || ''} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
+                    <Image key={p.url} src={p.url} alt={p.caption || ''} width={64} height={64} style={{ objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
                   ))}
                 </div>
               )}
